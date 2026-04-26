@@ -15,7 +15,7 @@ node_modules/
 
 # Tauri build artifacts (huge — ~5GB if committed)
 klosr-native/src-tauri/target/
-klosr-native/src-tauri/Cargo.lock
+# Cargo.lock IS committed for binaries (reproducible CI builds)
 klosr-native/src-tauri/gen/
 klosr-native/tauri-build*.log
 

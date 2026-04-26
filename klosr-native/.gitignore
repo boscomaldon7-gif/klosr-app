@@ -4,7 +4,7 @@ node_modules/
 
 # Tauri build artifacts
 src-tauri/target/
-src-tauri/Cargo.lock
+# Cargo.lock IS committed for binaries (reproducible CI builds)
 src-tauri/gen/
 
 # OS files

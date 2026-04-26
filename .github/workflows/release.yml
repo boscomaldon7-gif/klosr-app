@@ -100,19 +100,36 @@ jobs:
             klosr-native/src-tauri/target/
           key: ${{ runner.os }}-cargo-${{ matrix.label }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build + Bundle (with optional signing)
+      # Conditionally export Apple signing vars from a SHELL step (the only
+      # place we can safely conditional-on-secret without GHA expression hacks).
+      # If APPLE_CERTIFICATE secret is empty (the common case), we don't write
+      # any APPLE_* vars to GITHUB_ENV — tauri-action sees them as truly unset
+      # and skips the codesign path entirely. Mac DMGs ship UNSIGNED.
+      - name: Detect Apple signing secrets
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_CERT_INPUT: ${{ secrets.APPLE_CERTIFICATE }}
+        shell: bash
+        run: |
+          if [ -n "$APPLE_CERT_INPUT" ]; then
+            echo "Apple signing secrets detected — enabling code-sign + notarize path"
+            echo "APPLE_CERTIFICATE=${{ secrets.APPLE_CERTIFICATE }}" >> $GITHUB_ENV
+            echo "APPLE_CERTIFICATE_PASSWORD=${{ secrets.APPLE_CERTIFICATE_PASSWORD }}" >> $GITHUB_ENV
+            echo "APPLE_SIGNING_IDENTITY=${{ secrets.APPLE_SIGNING_IDENTITY }}" >> $GITHUB_ENV
+            echo "APPLE_ID=${{ secrets.APPLE_ID }}" >> $GITHUB_ENV
+            echo "APPLE_PASSWORD=${{ secrets.APPLE_PASSWORD }}" >> $GITHUB_ENV
+            echo "APPLE_TEAM_ID=${{ secrets.APPLE_TEAM_ID }}" >> $GITHUB_ENV
+          else
+            echo "No Apple signing secrets — Mac DMG will be UNSIGNED."
+            echo "Users will see Gatekeeper warning on first launch — right-click → Open."
+          fi
+
+      - name: Build + Bundle (unsigned by default; signs if Apple secrets set)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-          # macOS signing/notarization (optional — skipped if secrets not set)
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: ./klosr-native
           tagName: ${{ github.event.inputs.tag || github.ref_name }}

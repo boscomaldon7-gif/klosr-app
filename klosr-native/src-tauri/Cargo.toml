@@ -1,6 +1,6 @@
 [package]
 name = "klosr-native"
-version = "0.3.6"
+version = "0.3.7"
 description = "Klosr Native Desktop — sales co-pilot for founders"
 authors = ["Bosco Maldonado Arias <hello@klosr.com>"]
 edition = "2021"
