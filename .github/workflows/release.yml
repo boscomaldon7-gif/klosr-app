@@ -125,6 +125,7 @@ jobs:
           fi
 
       - name: Build + Bundle (unsigned by default; signs if Apple secrets set)
+        id: tauri_build
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -150,3 +151,83 @@ jobs:
           prerelease: false
           includeUpdaterJson: true
           args: ${{ matrix.args }}
+
+      # ────────────────────────────────────────────────────────────────
+      # macOS post-bundle: inject Info.plist usage descriptions + rebuild DMG
+      #
+      # Tauri 2's auto-generated Info.plist is missing the macOS usage
+      # description strings. Without these, macOS SILENTLY denies the
+      # capture_screen and CGEvent (inject_text) APIs even when the user
+      # has granted permissions in System Settings.
+      #
+      # We use `plutil -insert` to add the keys directly to the bundled
+      # Info.plist, then rebuild the .dmg from the patched .app, then
+      # replace the asset on the GitHub Release with `gh release upload --clobber`.
+      # ────────────────────────────────────────────────────────────────
+      - name: Patch Info.plist + rebuild DMG (macOS only)
+        if: matrix.platform == 'macos-latest' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_TRIPLE: ${{ matrix.args == '--target aarch64-apple-darwin' && 'aarch64-apple-darwin' || 'x86_64-apple-darwin' }}
+          DMG_ARCH: ${{ matrix.args == '--target aarch64-apple-darwin' && 'aarch64' || 'x64' }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        shell: bash
+        working-directory: klosr-native
+        run: |
+          set -euo pipefail
+          APP_PATH="src-tauri/target/${TARGET_TRIPLE}/release/bundle/macos/Klosr.app"
+          PLIST="${APP_PATH}/Contents/Info.plist"
+          if [ ! -f "$PLIST" ]; then
+            echo "::warning::Info.plist not found at $PLIST — skipping patch"
+            exit 0
+          fi
+
+          echo "→ Patching Info.plist at $PLIST"
+          plutil -insert NSScreenCaptureUsageDescription -string \
+            "Klosr reads your screen to detect sales conversations and draft replies in your voice." "$PLIST" || true
+          plutil -insert NSAccessibilityUsageDescription -string \
+            "Klosr types drafted replies into your active app's composer (WhatsApp, Slack, etc.)." "$PLIST" || true
+          plutil -insert NSAppleEventsUsageDescription -string \
+            "Klosr uses Apple Events to coordinate with other apps when injecting drafts." "$PLIST" || true
+          plutil -insert NSInputMonitoringUsageDescription -string \
+            "Klosr listens for the global hotkey (Cmd+Shift+K) to show/hide the capsule." "$PLIST" || true
+          plutil -insert NSHighResolutionCapable -bool true "$PLIST" 2>/dev/null || true
+
+          # Replace existing keys if present (insert fails silently above for existing keys)
+          plutil -replace NSScreenCaptureUsageDescription -string \
+            "Klosr reads your screen to detect sales conversations and draft replies in your voice." "$PLIST"
+          plutil -replace NSAccessibilityUsageDescription -string \
+            "Klosr types drafted replies into your active app's composer (WhatsApp, Slack, etc.)." "$PLIST"
+          plutil -replace NSAppleEventsUsageDescription -string \
+            "Klosr uses Apple Events to coordinate with other apps when injecting drafts." "$PLIST"
+
+          echo "→ Verifying patched plist:"
+          plutil -p "$PLIST" | grep -E "NS(Screen|Accessibility|AppleEvents|InputMonitoring)" || true
+
+          # Strip quarantine xattr (set by curl/browser downloads — causes "damaged" error)
+          xattr -cr "$APP_PATH" || true
+
+          # Rebuild the DMG so the patched .app is the one users download.
+          DMG_DIR="src-tauri/target/${TARGET_TRIPLE}/release/bundle/dmg"
+          mkdir -p "$DMG_DIR"
+          # Find the existing dmg (tauri names it Klosr_<ver>_<arch>.dmg)
+          OLD_DMG=$(ls "$DMG_DIR"/Klosr_*_${DMG_ARCH}.dmg 2>/dev/null | head -1 || echo "")
+          NEW_DMG="$DMG_DIR/Klosr_patched_${DMG_ARCH}.dmg"
+          rm -f "$NEW_DMG"
+
+          echo "→ Creating fresh DMG with patched .app"
+          hdiutil create -volname "Klosr" -srcfolder "$APP_PATH" -ov -format UDZO "$NEW_DMG"
+
+          if [ -n "$OLD_DMG" ]; then
+            mv -f "$NEW_DMG" "$OLD_DMG"
+            FINAL_DMG="$OLD_DMG"
+          else
+            FINAL_DMG="$NEW_DMG"
+          fi
+          echo "→ Final DMG: $FINAL_DMG"
+
+          # Replace the asset on the GitHub Release
+          ASSET_NAME=$(basename "$FINAL_DMG")
+          echo "→ Replacing $ASSET_NAME on release $TAG"
+          gh release upload "$TAG" "$FINAL_DMG" --repo "${{ github.repository }}" --clobber
+          echo "✓ Patched DMG uploaded"

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTD/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Permission usage descriptions REQUIRED by macOS for the
+         capture_screen and inject_text features to work.
+         Without these strings, macOS silently denies the API call
+         even if the user has granted permissions in System Settings. -->
+
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>Klosr reads your screen to detect sales conversations and draft replies in your voice — same as Cluely / Loom / Otter.</string>
+
+    <key>NSAccessibilityUsageDescription</key>
+    <string>Klosr types drafted replies into your active app's composer (WhatsApp, Slack, Outlook, etc.) so you don't have to copy-paste.</string>
+
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Klosr uses Apple Events to coordinate with other apps when injecting drafts.</string>
+
+    <key>NSInputMonitoringUsageDescription</key>
+    <string>Klosr listens for the global hotkey (Cmd+Shift+K) to show/hide the capsule from anywhere.</string>
+
+    <!-- Network — Klosr backend + Anthropic + integrations.
+         exceptionDomain in tauri.conf.json handles the NSAppTransportSecurity entry. -->
+
+    <!-- Make Klosr a regular app (not "Agent" / accessory) so it shows in the Dock. -->
+    <key>LSUIElement</key>
+    <false/>
+
+    <!-- Allow the overlay window to float above other apps without taking focus. -->
+    <key>LSBackgroundOnly</key>
+    <false/>
+
+    <!-- Localizations supported. Add more as we ship them. -->
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+    </array>
+
+    <!-- High-resolution capable (Retina) -->
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <!-- macOS minimum — matches tauri.conf.json -->
+    <key>LSMinimumSystemVersion</key>
+    <string>11.0</string>
+</dict>
+</plist>
