@@ -1,0 +1,15 @@
+{
+  "name": "klosr-native",
+  "version": "0.1.0",
+  "description": "Klosr Native Desktop — sales co-pilot that reads your screen and drafts replies in your voice across every app",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:debug": "tauri build --debug"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0"
+  }
+}

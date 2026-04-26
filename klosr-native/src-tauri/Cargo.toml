@@ -1,0 +1,78 @@
+[package]
+name = "klosr-native"
+version = "0.3.5"
+description = "Klosr Native Desktop — sales co-pilot for founders"
+authors = ["Bosco Maldonado Arias <hello@klosr.com>"]
+edition = "2021"
+rust-version = "1.77"
+
+# Note: no [lib] section — this is a desktop-only Tauri 2.0 app, so the
+# main.rs binary crate is all we need. (Mobile builds would require a lib
+# for shared code, but we're not targeting mobile.)
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+# Tauri core + plugins (v2)
+tauri = { version = "2.1", features = ["tray-icon", "image-png", "image-ico"] }
+tauri-plugin-shell = "2.2"
+tauri-plugin-notification = "2.2"
+tauri-plugin-global-shortcut = "2.2"
+tauri-plugin-updater = "2.3"
+tauri-plugin-dialog = "2.2"
+tauri-plugin-os = "2.2"
+tauri-plugin-clipboard-manager = "2.2"
+
+# Native screen capture (Phase 2 — used by capture_screen command)
+# Cross-platform via the `screenshots` crate. Captures the entire screen
+# silently — no browser sharing banner. We then send the bytes to the
+# Klosr backend Vision endpoint via fetch from JS.
+screenshots = "0.8"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+base64 = "0.22"
+
+# Serde / JSON for IPC payloads
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# Cross-platform clipboard (used by inject_text to put the draft on the
+# clipboard before pasting into the target app)
+arboard = "3.6"
+
+# Phase 3 — native text injection into the target app's focused composer.
+# Windows path: SendInput keystroke simulation via Win32.
+# Also used in setup() to apply WS_EX_NOACTIVATE — Klosr's overlay never
+# steals focus from the underlying app, so SendInput Ctrl+V always lands
+# in the user's actual target (WhatsApp Desktop, Outlook, etc).
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+# macOS path: AXUIElement (accessibility) + Cocoa keystroke synthesis.
+# Built as a fallback to clipboard+paste when accessibility isn't granted
+# (we still simulate Cmd+V via core-graphics).
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+core-graphics = "0.24"
+
+[features]
+# Default: shipped builds. Includes the auto-updater wired up to GitHub Releases.
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+# Build optimizations for release
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true

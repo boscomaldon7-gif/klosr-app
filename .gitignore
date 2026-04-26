@@ -1,0 +1,56 @@
+# Klosr — root .gitignore (covers all subprojects)
+
+# Environment / secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Tauri build artifacts (huge — ~5GB if committed)
+klosr-native/src-tauri/target/
+klosr-native/src-tauri/Cargo.lock
+klosr-native/src-tauri/gen/
+klosr-native/tauri-build*.log
+
+# Vercel build cache
+.vercel/
+backend/.vercel/
+
+# Next.js / build output
+.next/
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local installer copies (we ship from GitHub Releases instead)
+Klosr-Setup*.exe
+Klosr_*-setup.exe
+Klosr_*.dmg
+Klosr_*.deb
+Klosr_*.AppImage
+Klosr_*.msi

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You've been invited to Klosr</title>
+  <link rel="icon" type="image/png" href="/icons/icon128.png">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <header class="site-nav">
+    <a href="/" class="brand"><span class="brand-badge">K</span><span class="brand-name">Klosr</span></a>
+    <nav>
+      <a href="/pricing">Pricing</a>
+      <a href="/install">Install</a>
+      <a href="/app.html" class="cta-mini">Klosr Desktop →</a>
+    </nav>
+  </header>
+
+  <main>
+    <div style="max-width: 540px; margin: 100px auto 60px; padding: 40px 30px; text-align: center; background: linear-gradient(160deg, rgba(255, 214, 10, 0.08), rgba(245, 158, 11, 0.02)); border: 1px solid rgba(255, 214, 10, 0.40); border-radius: 18px;">
+      <div style="font-size: 50px; margin-bottom: 20px;">🤝</div>
+      <h1 style="font-size: 32px; letter-spacing: -0.025em; font-weight: 800; margin: 0 0 14px;">You've been invited to Klosr</h1>
+      <p style="font-size: 16px; color: rgba(244,244,245,0.78); line-height: 1.55; margin: 0 0 28px;">
+        Klosr is the AI sales co-pilot for B2B founders. Reads your screen, drafts replies in your voice, runs your demos with Live Assist. <strong>Free for founders, forever.</strong>
+      </p>
+      <a href="/install" class="btn-primary" id="continue-btn">Install Klosr — free →</a>
+      <p style="margin-top: 26px; font-size: 12.5px; color: rgba(244,244,245,0.55);">
+        Referred by <span id="referrer-code" style="color:#FFD60A; font-family: ui-monospace, monospace; font-weight: 700;">…</span>
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-foot">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand"><span class="brand-badge">K</span> Klosr</div>
+        <div class="foot-tag">Sales OS for founders. Close more, faster.</div>
+      </div>
+      <div>
+        <div class="foot-h">Product</div>
+        <a href="/install">Install</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/changelog">Changelog</a>
+      </div>
+      <div>
+        <div class="foot-h">Legal</div>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+      <div>
+        <div class="foot-h">Built by</div>
+        <a href="mailto:hello@klosr.com">hello@klosr.com</a>
+      </div>
+    </div>
+    <div class="foot-tail">© 2026 Klosr. Built by founders, for founders.</div>
+  </footer>
+
+  <script>
+    // Pull the referral code from the path: /r/{code}
+    const m = location.pathname.match(/^\/r\/([a-zA-Z0-9_-]+)/);
+    const code = m ? m[1] : (new URLSearchParams(location.search)).get("code") || "";
+    if (code) {
+      document.getElementById("referrer-code").textContent = code;
+      // Stash referral attribution in localStorage so the PWA picks it up on first connect
+      localStorage.setItem("klosr_referral_code", code);
+      localStorage.setItem("klosr_referral_ts", Date.now());
+    } else {
+      document.getElementById("referrer-code").textContent = "(unknown)";
+    }
+  </script>
+</body>
+</html>

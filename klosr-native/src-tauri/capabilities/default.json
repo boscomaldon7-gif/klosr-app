@@ -1,0 +1,43 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities granted to the main Klosr Desktop window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-unminimize",
+    "core:window:allow-is-visible",
+    "core:webview:default",
+    "core:event:default",
+    "core:menu:default",
+    "core:tray:default",
+    "core:image:default",
+    "core:path:default",
+
+    "shell:allow-open",
+
+    "notification:default",
+    "notification:allow-notify",
+    "notification:allow-request-permission",
+    "notification:allow-is-permission-granted",
+
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered",
+
+    "dialog:allow-message",
+    "dialog:allow-confirm",
+
+    "os:allow-platform",
+    "os:allow-version",
+
+    "clipboard-manager:allow-write-text",
+    "clipboard-manager:allow-read-text",
+
+    "updater:default"
+  ]
+}

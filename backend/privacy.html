@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — Klosr</title>
+  <link rel="icon" type="image/png" href="/icons/icon128.png">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <header class="site-nav">
+    <a href="/" class="brand"><span class="brand-badge">K</span><span class="brand-name">Klosr</span></a>
+    <nav>
+      <a href="/pricing">Pricing</a>
+      <a href="/install">Install</a>
+      <a href="/changelog">Changelog</a>
+      <a href="/app.html" class="cta-mini">Klosr Desktop →</a>
+    </nav>
+  </header>
+
+  <main>
+    <article class="content-page">
+      <h1>Privacy Policy</h1>
+      <div class="sub">Last updated: 25 April 2026</div>
+
+      <p>Klosr is a sales co-pilot built for B2B founders. This policy explains exactly what data Klosr handles, where it goes, what we keep, and what we don't. Written in plain English because privacy law is full of weasel words and we don't want any.</p>
+
+      <h2>Who we are</h2>
+      <p>Klosr is operated by Bosco Maldonado Arias as a sole proprietorship pending company formation. Contact: <a href="mailto:hello@klosr.com" style="color:#FFD60A">hello@klosr.com</a>. Address available upon request.</p>
+
+      <h2>What Klosr collects — short version</h2>
+      <ul>
+        <li><strong>Profile data you scrape:</strong> LinkedIn profile data of prospects you analyze. Stored in your browser's local storage. Klosr's servers see this only when you explicitly invoke an AI action (brief, dossier, draft).</li>
+        <li><strong>Your founder profile:</strong> What you sell, your ICP, proof points, voice examples. Stored locally; mirrored to our cloud (Upstash) keyed by an anonymous Install ID for cross-device sync (Klosr Desktop).</li>
+        <li><strong>Screen captures during Watch mode:</strong> Captured and sent to Claude Opus 4.7 for analysis. Frames are NOT stored on Klosr servers. They're transient — sent, analyzed, discarded.</li>
+        <li><strong>Telemetry events:</strong> Anonymous metadata about which Klosr features you use (e.g. "brief_generated", "vision_opened"). Stored in Upstash for product analytics. No content of your messages.</li>
+        <li><strong>Pipeline data:</strong> Deals, commitments, objections — all stored locally in your browser. Never on Klosr servers unless you explicitly push to a CRM (HubSpot/Pipedrive/Salesforce — those use OAuth tokens you control).</li>
+      </ul>
+
+      <h2>Where data goes</h2>
+
+      <h3>Anthropic (Claude)</h3>
+      <p>When you generate a brief, dossier, drafted reply, or Vision analysis, the relevant context (prospect data + your founder context) is sent to <strong>Anthropic's Claude API</strong> for inference. Anthropic's privacy policy: <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener" style="color:#FFD60A">anthropic.com/legal/privacy</a>. Anthropic does <strong>NOT</strong> train on API traffic.</p>
+
+      <h3>Vercel</h3>
+      <p>Klosr's backend (<code>backend-kappa-nine-57.vercel.app</code>) is hosted on Vercel. Vercel sees standard HTTP request metadata (IP, user-agent) for the duration of API calls. Vercel privacy policy: <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener" style="color:#FFD60A">vercel.com/legal/privacy-policy</a>.</p>
+
+      <h3>Upstash (Redis)</h3>
+      <p>Klosr stores telemetry events, your synced founder profile (proof library, objection playbook, voice examples), and transient pending-reply queues in <strong>Upstash Redis</strong>, hosted in EU-West-1 (Ireland). Keyed by anonymous Install ID. Upstash privacy: <a href="https://upstash.com/trust/privacy.pdf" target="_blank" rel="noopener" style="color:#FFD60A">upstash.com/trust</a>.</p>
+
+      <h3>Apollo, NinjaPear/Proxycurl, SerpAPI, Deepgram</h3>
+      <p>When you trigger specific features:</p>
+      <ul>
+        <li><strong>Apollo</strong> (people enrichment, warm-lead search): we send the prospect's LinkedIn URL or company domain to look up email + phone + company data.</li>
+        <li><strong>NinjaPear / Proxycurl</strong> (LinkedIn enrichment): for full company / person profiles when needed.</li>
+        <li><strong>SerpAPI</strong> (web search): we send a Google search query (typically prospect name + company) to fetch recent news for dossier + revival messages.</li>
+        <li><strong>Deepgram</strong> (call transcription): when Live Assist is active, audio from the active call tab is streamed to Deepgram for real-time transcription. Deepgram does not retain transcripts.</li>
+      </ul>
+
+      <h3>CRM integrations (HubSpot / Pipedrive / Salesforce)</h3>
+      <p>Only if you opt in. OAuth tokens / API tokens are stored in Upstash keyed by your Install ID. Klosr only writes deals + contacts you explicitly push.</p>
+
+      <h2>What Klosr does NOT do</h2>
+      <ul>
+        <li>We do <strong>not</strong> sell your data, ever, full stop.</li>
+        <li>We do <strong>not</strong> train AI models on your data.</li>
+        <li>We do <strong>not</strong> read your prospect conversations unless you explicitly invoke an AI action.</li>
+        <li>We do <strong>not</strong> store screen captures from Watch mode after analysis. They're transient.</li>
+        <li>We do <strong>not</strong> share your data with advertisers, brokers, or any third party beyond the infrastructure providers listed above.</li>
+        <li>We do <strong>not</strong> require you to create an account to use Klosr's free tier. Install ID is an anonymous UUID.</li>
+      </ul>
+
+      <h2>Watch mode + screen capture</h2>
+      <p>When you click "Start watching" in Klosr Desktop, your browser shows a <strong>native screen-share permission prompt</strong>. Klosr does NOT bypass this. The browser's standard "You're sharing your screen" indicator stays visible the entire time. You can click Stop at any moment.</p>
+      <p>Klosr samples one frame every ~4 seconds, computes a 16×16 perceptual hash, and only sends the frame to Anthropic when meaningful change is detected. We rate-limit Vision API calls to one per 12 seconds maximum to keep cost (and your data exposure) bounded.</p>
+
+      <h2>Cookies</h2>
+      <p>The Klosr public site (<code>klosr.com</code> and <code>backend-kappa-nine-57.vercel.app</code>) uses <strong>no third-party cookies</strong>. We use localStorage only for: storing your Install ID, your Slack webhook URL, and your Pipedrive domain/token. All client-side, all on your device.</p>
+
+      <h2>Your rights (GDPR / CCPA)</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li>Access all data Klosr holds about you (request via <a href="mailto:hello@klosr.com" style="color:#FFD60A">hello@klosr.com</a> with your Install ID)</li>
+        <li>Delete your data — uninstall the extension and email us your Install ID; we purge from Upstash within 7 days</li>
+        <li>Export your data — pipeline + history can be exported from Klosr Desktop directly</li>
+        <li>Object to processing — stop using Klosr; uninstall purges local data immediately</li>
+      </ul>
+
+      <h2>Data retention</h2>
+      <ul>
+        <li><strong>Pending replies</strong> in Upstash: 5 minutes (auto-purged)</li>
+        <li><strong>Telemetry events:</strong> 90 days rolling</li>
+        <li><strong>Synced founder state:</strong> until next sync OR you uninstall</li>
+        <li><strong>Notification metadata:</strong> 24 hours</li>
+        <li><strong>HubSpot / Salesforce / Pipedrive tokens:</strong> until you disconnect or revoke</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>Klosr is for B2B founders. Not directed at children under 16. We don't knowingly collect data from anyone under 16.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If we change anything material, we'll update this page and the "Last updated" date above. Material changes that affect existing users will be announced in the Klosr Desktop app + via email if you're on a paid plan.</p>
+
+      <hr>
+
+      <p style="font-size:13px; color: rgba(244,244,245,0.55);">
+        Questions? Email <a href="mailto:hello@klosr.com" style="color:#FFD60A">hello@klosr.com</a>. Klosr is built solo by Bosco Maldonado Arias and answers come from a real human, usually within 24h.
+      </p>
+    </article>
+  </main>
+
+  <footer class="site-foot">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand"><span class="brand-badge">K</span> Klosr</div>
+        <div class="foot-tag">Sales OS for founders. Close more, faster.</div>
+      </div>
+      <div>
+        <div class="foot-h">Product</div>
+        <a href="/install">Install</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/changelog">Changelog</a>
+        <a href="/app.html">Klosr Desktop</a>
+      </div>
+      <div>
+        <div class="foot-h">Legal</div>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+      <div>
+        <div class="foot-h">Built by</div>
+        <a href="https://www.linkedin.com/in/bosco-maldonado/" target="_blank" rel="noopener">Bosco Maldonado Arias</a>
+        <a href="mailto:hello@klosr.com">hello@klosr.com</a>
+      </div>
+    </div>
+    <div class="foot-tail">© 2026 Klosr. Built by founders, for founders.</div>
+  </footer>
+</body>
+</html>

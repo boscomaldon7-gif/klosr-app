@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0A0A0B">
+  <title>Pricing — Klosr</title>
+  <meta name="description" content="Klosr pricing. Founder tier free forever. Pro: $29/mo. Team: $99/mo per seat. No credit card to start.">
+  <link rel="icon" type="image/png" href="/icons/icon128.png">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <header class="site-nav">
+    <a href="/" class="brand"><span class="brand-badge">K</span><span class="brand-name">Klosr</span></a>
+    <nav>
+      <a href="/pricing">Pricing</a>
+      <a href="/install">Install</a>
+      <a href="/changelog">Changelog</a>
+      <a href="/app.html" class="cta-mini">Klosr Desktop →</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="pricing">
+      <div class="pricing-head">
+        <h1>Built for solo founders.<br>Priced like one.</h1>
+        <p>The Founder tier is free forever — for solo founders closing under €5K MRR via Klosr. Upgrade only when Klosr is making you real money.</p>
+      </div>
+
+      <div class="tier-grid">
+        <!-- Founder (Free) -->
+        <div class="tier">
+          <div class="tier-name">Founder</div>
+          <div class="tier-price">
+            <span class="num">$0</span>
+            <span class="per">/ forever</span>
+          </div>
+          <div class="tier-tag">Free for solo founders. No card required.</div>
+          <div class="tier-cta">
+            <a href="/install" class="secondary">Install Klosr →</a>
+          </div>
+          <ul>
+            <li>Klosr Chrome extension (LinkedIn + Meet/Zoom/Teams)</li>
+            <li>Klosr Desktop (PWA Watch mode)</li>
+            <li>Claude Opus 4.7 multimodal Vision</li>
+            <li>Live Assist on calls (unlimited)</li>
+            <li>Daily Close dashboard + pipeline + commitments</li>
+            <li>Up to 100 deals tracked</li>
+            <li>Up to 50 Vision analyses/day</li>
+            <li>HubSpot / Pipedrive / Salesforce push (limited to 25 deals/mo)</li>
+            <li class="faded">Multi-seat team workspace</li>
+            <li class="faded">Custom voice + proof training</li>
+          </ul>
+        </div>
+
+        <!-- Pro (Featured) -->
+        <div class="tier featured">
+          <div class="tier-badge">Most Popular</div>
+          <div class="tier-name">Pro</div>
+          <div class="tier-price">
+            <span class="num">$29</span>
+            <span class="per">/ mo</span>
+          </div>
+          <div class="tier-tag">For founders running real outbound. Cancel anytime.</div>
+          <div class="tier-cta">
+            <a href="#" class="primary" data-stripe-tier="pro">Upgrade to Pro →</a>
+          </div>
+          <ul>
+            <li><strong>Everything in Founder</strong>, plus:</li>
+            <li><strong>Unlimited</strong> Vision analyses</li>
+            <li><strong>Unlimited</strong> deals + CRM pushes</li>
+            <li>Priority Opus 4.7 (no rate-limit queue)</li>
+            <li>Custom voice training (10 voice examples)</li>
+            <li>Custom proof library (unlimited entries)</li>
+            <li>Custom objection playbook</li>
+            <li>Weekly brag-post auto-generation</li>
+            <li>Klosr Slack app (vs. webhook)</li>
+            <li>Priority support · Bosco's WhatsApp</li>
+          </ul>
+        </div>
+
+        <!-- Team -->
+        <div class="tier">
+          <div class="tier-name">Team</div>
+          <div class="tier-price">
+            <span class="num">$99</span>
+            <span class="per">/ seat / mo</span>
+          </div>
+          <div class="tier-tag">For founder + 3-10 sellers. Shared playbooks.</div>
+          <div class="tier-cta">
+            <a href="mailto:hello@klosr.com?subject=Klosr%20Team%20Plan" class="secondary">Talk to Bosco →</a>
+          </div>
+          <ul>
+            <li><strong>Everything in Pro</strong>, plus:</li>
+            <li>Multi-seat workspace (up to 10 sellers)</li>
+            <li>Shared proof library + objection playbook</li>
+            <li>Founder hands ICP/voice off to first AE</li>
+            <li>Team pipeline view + leaderboard</li>
+            <li>Manager-level analytics + admin panel</li>
+            <li>Team Slack workspace integration</li>
+            <li>Priority bug fixes + feature requests</li>
+            <li>SSO (SAML coming Q3)</li>
+            <li>Custom enterprise contracts available</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="pricing-faq">
+        <h2>Common questions</h2>
+
+        <div class="faq-q">
+          <div class="faq-q-q">Why is the free tier real (not a trial)?</div>
+          <div class="faq-q-a">
+            Because solo founders closing their first 5 customers shouldn't be paying for a tool that's supposed to help them get to 5 customers. Klosr is free until you're making real money with it. When you upgrade to Pro, that's because Klosr is paying for itself 10x over — not because we forced you.
+          </div>
+        </div>
+
+        <div class="faq-q">
+          <div class="faq-q-q">What counts as a "Vision analysis"?</div>
+          <div class="faq-q-a">
+            Each time Klosr's screen-watcher sees a new sales-relevant frame and asks Claude Opus 4.7 to draft a response. The Free tier caps at 50/day (plenty for solo founders running 30-50 DMs). Pro is unlimited.
+          </div>
+        </div>
+
+        <div class="faq-q">
+          <div class="faq-q-q">Do you store my screen captures?</div>
+          <div class="faq-q-a">
+            No. Frames go directly to Anthropic for inference and are never stored on Klosr servers. Anthropic doesn't train on our API traffic. We log only event metadata (timestamp + intent + outcome) to power your pipeline analytics. Full privacy policy at <a href="/privacy" style="color:#FFD60A">/privacy</a>.
+          </div>
+        </div>
+
+        <div class="faq-q">
+          <div class="faq-q-q">Can I cancel?</div>
+          <div class="faq-q-a">
+            Pro is monthly, no contract. Cancel from your account dashboard, takes effect at end of billing cycle. No "talk to sales" gate, no retention emails — if Klosr stops working for you, you stop paying.
+          </div>
+        </div>
+
+        <div class="faq-q">
+          <div class="faq-q-q">What's coming on Pro that's not here yet?</div>
+          <div class="faq-q-a">
+            Native Tauri desktop app (replaces the PWA, runs as menubar app, reads native WhatsApp Desktop / Slack Desktop without browser banner) — shipping ~4 weeks. Pro users get it included free. Roadmap on <a href="/changelog" style="color:#FFD60A">/changelog</a>.
+          </div>
+        </div>
+
+        <div class="faq-q">
+          <div class="faq-q-q">I'm a solo founder making $0 MRR. Will you really not charge me?</div>
+          <div class="faq-q-a">
+            Correct. Use Klosr free until it's helped you close real revenue. Built by founders. We've been there.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-foot">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand"><span class="brand-badge">K</span> Klosr</div>
+        <div class="foot-tag">Sales OS for founders. Close more, faster.</div>
+      </div>
+      <div>
+        <div class="foot-h">Product</div>
+        <a href="/install">Install</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/changelog">Changelog</a>
+        <a href="/app.html">Klosr Desktop</a>
+      </div>
+      <div>
+        <div class="foot-h">Legal</div>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+      <div>
+        <div class="foot-h">Built by</div>
+        <a href="https://www.linkedin.com/in/bosco-maldonado/" target="_blank" rel="noopener">Bosco Maldonado Arias</a>
+        <a href="mailto:hello@klosr.com">hello@klosr.com</a>
+      </div>
+    </div>
+    <div class="foot-tail">© 2026 Klosr. Built by founders, for founders.</div>
+  </footer>
+
+  <script>
+    // Pricing — Stripe checkout buttons.
+    // Founder tier installs locally (no payment). Pro upgrades go through
+    // Stripe via /api/intel action `stripe-create-checkout`. Team is sales-led.
+    document.querySelectorAll('[data-stripe-tier]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const tier = btn.dataset.stripeTier;
+        // Pull installId from localStorage if user is connected to PWA;
+        // otherwise we still create a checkout that ties to email at completion.
+        const installId = localStorage.getItem('klosr_pwa_install_id') || '';
+        const email = localStorage.getItem('klosr_email') || '';
+
+        btn.textContent = 'Redirecting…';
+        try {
+          const res = await fetch('/api/intel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'stripe-create-checkout',
+              params: { tier, installId, email, successUrl: location.origin + '/upgrade-success.html', cancelUrl: location.origin + '/pricing.html' }
+            })
+          });
+          const data = await res.json();
+          if (data.ok && data.url) {
+            location.href = data.url;
+          } else {
+            btn.textContent = 'Upgrade unavailable — email hello@klosr.com';
+            btn.style.opacity = '0.7';
+          }
+        } catch (err) {
+          btn.textContent = 'Try again';
+          btn.style.opacity = '0.7';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

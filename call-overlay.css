@@ -1,0 +1,945 @@
+/* Klosr — In-Call Overlay styles
+   Fixed floating panel on Meet / Zoom / Teams. Matte black + gold palette.
+   Drag-anywhere via the header bar. z-index high enough to beat native UI. */
+
+.klosr-overlay {
+  all: initial;
+  position: fixed;
+  top: 88px;
+  right: 16px;
+  width: 340px;
+  max-height: calc(100vh - 160px);
+  z-index: 2147483600;
+  background: #0A0A0B;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6), 0 2px 10px rgba(0, 0, 0, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  color: #F4F4F5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: max-height 180ms ease;
+}
+.klosr-overlay.klosr-min { max-height: 44px; }
+.klosr-overlay.klosr-min .klosr-overlay-body { display: none; }
+
+.klosr-overlay-drag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: move;
+  background: linear-gradient(180deg, #121214 0%, #0A0A0B 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  user-select: none;
+  flex-shrink: 0;
+}
+.klosr-overlay-badge {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #FFD60A;
+  color: #0A0A0B;
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.klosr-overlay-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: #F4F4F5;
+  letter-spacing: -0.1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.klosr-overlay-title span { color: rgba(244, 244, 245, 0.54); font-weight: 500; }
+.klosr-overlay-ctrls { display: flex; gap: 4px; flex-shrink: 0; }
+.klosr-overlay-btn {
+  all: unset;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(244, 244, 245, 0.54);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.klosr-overlay-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #FFD60A;
+}
+
+.klosr-overlay-body {
+  padding: 12px;
+  overflow-y: auto;
+  max-height: calc(100vh - 240px);
+}
+
+/* Empty / loading */
+.klosr-empty {
+  padding: 16px 4px;
+  text-align: center;
+}
+.klosr-empty-title { font-size: 13px; font-weight: 700; color: #F4F4F5; margin-bottom: 6px; }
+.klosr-empty-sub   { font-size: 12px; color: rgba(244, 244, 245, 0.54); line-height: 1.5; }
+.klosr-loading {
+  padding: 14px 4px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(244, 244, 245, 0.54);
+}
+
+/* Picker */
+.klosr-picker-title { font-size: 12.5px; font-weight: 700; color: #F4F4F5; margin-bottom: 3px; }
+.klosr-picker-sub   { font-size: 11px; color: rgba(244, 244, 245, 0.54); margin-bottom: 10px; line-height: 1.45; }
+.klosr-picker-list  { display: flex; flex-direction: column; gap: 4px; }
+.klosr-picker-row {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+}
+.klosr-picker-row:hover {
+  border-color: rgba(255, 214, 10, 0.40);
+  background: rgba(255, 214, 10, 0.06);
+}
+.klosr-picker-avatar {
+  width: 30px; height: 30px;
+  background: rgba(255, 214, 10, 0.12);
+  color: #FFD60A;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.klosr-picker-info { flex: 1; min-width: 0; }
+.klosr-picker-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #F4F4F5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.klosr-picker-headline {
+  font-size: 11px;
+  color: rgba(244, 244, 245, 0.54);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Cue tabs */
+.klosr-cue-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding: 3px;
+  background: #121214;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.klosr-tab {
+  all: unset;
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px;
+  border-radius: 5px;
+  color: rgba(244, 244, 245, 0.54);
+  cursor: pointer;
+  transition: all 120ms;
+}
+.klosr-tab:hover { color: #F4F4F5; }
+.klosr-tab-active {
+  background: rgba(255, 214, 10, 0.12);
+  color: #FFD60A;
+}
+
+.klosr-icp-chip {
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid rgba(74, 222, 128, 0.24);
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: #86efac;
+  line-height: 1.45;
+}
+
+.klosr-cue-row {
+  padding: 8px 10px;
+  background: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.klosr-cue-trig {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #FFD60A;
+  margin-bottom: 4px;
+  line-height: 1.4;
+  font-style: italic;
+}
+.klosr-cue-resp {
+  font-size: 11.5px;
+  color: #F4F4F5;
+  line-height: 1.5;
+}
+.klosr-cue-title { font-size: 12px; font-weight: 700; color: #F4F4F5; margin-bottom: 2px; }
+.klosr-cue-metric { font-size: 11px; font-weight: 600; color: #FFD60A; margin-bottom: 4px; }
+.klosr-cue-body  { font-size: 11.5px; color: rgba(244,244,245,0.78); line-height: 1.5; }
+.klosr-cue-proof { border-color: rgba(255,214,10,0.25); }
+.klosr-cue-note  { border-color: rgba(92,158,255,0.30); }
+
+.klosr-cue-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 11.5px;
+  color: rgba(244, 244, 245, 0.36);
+  border: 1px dashed rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+}
+.klosr-cue-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 245, 0.36);
+  margin: 14px 0 6px;
+}
+
+/* Ask Klosr */
+.klosr-ask-wrap {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.klosr-ask-input {
+  all: unset;
+  flex: 1;
+  padding: 8px 10px;
+  background: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #F4F4F5;
+}
+.klosr-ask-input:focus { border-color: rgba(255, 214, 10, 0.50); }
+.klosr-ask-btn {
+  all: unset;
+  padding: 8px 12px;
+  background: #FFD60A;
+  color: #0A0A0B;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.klosr-ask-btn:hover { filter: brightness(1.08); }
+.klosr-ask-btn[disabled] { opacity: 0.5; cursor: wait; }
+
+.klosr-ask-result {
+  padding: 0;
+}
+.klosr-ask-result .klosr-loading { padding: 10px; }
+.klosr-ask-summary {
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  background: rgba(255, 214, 10, 0.06);
+  border-left: 3px solid #FFD60A;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: #F4F4F5;
+  line-height: 1.4;
+}
+.klosr-ask-body {
+  padding: 10px;
+  background: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #F4F4F5;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.klosr-ask-next {
+  margin-top: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(244, 244, 245, 0.54);
+}
+.klosr-ask-error {
+  padding: 10px;
+  font-size: 11.5px;
+  color: #F87171;
+}
+
+.klosr-foot {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: center;
+}
+.klosr-foot-btn {
+  all: unset;
+  font-size: 11px;
+  color: rgba(244, 244, 245, 0.54);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.klosr-foot-btn:hover { color: #FFD60A; background: rgba(255, 214, 10, 0.06); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIVE ASSIST — header controls, rec banner, coach, alerts, summary
+   ═══════════════════════════════════════════════════════════════════ */
+
+.klosr-live-toggle {
+  background: rgba(52, 211, 153, 0.12) !important;
+  color: #6EE7B7 !important;
+  border: 1px solid rgba(52, 211, 153, 0.45) !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.04em;
+}
+.klosr-live-toggle:hover { filter: brightness(1.1); }
+.klosr-live-toggle.klosr-live-active {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border-color: rgba(239, 68, 68, 0.50) !important;
+  color: #FCA5A5 !important;
+}
+
+/* Header REC status (pulsing red dot + timer) */
+.klosr-live-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #FCA5A5;
+}
+.klosr-rec-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #EF4444;
+  animation: klosr-rec-pulse 1.4s ease-in-out infinite;
+}
+@keyframes klosr-rec-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50%      { opacity: 0.55; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+
+/* Live body container */
+.klosr-live {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 0 8px;
+}
+.klosr-live-disclaimer {
+  font-size: 10.5px;
+  color: rgba(251, 191, 36, 0.85);
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  border-radius: 6px;
+  padding: 6px 10px;
+  line-height: 1.45;
+}
+
+/* Coach panel — topic + say next + insight */
+.klosr-live-coach {
+  background: rgba(255, 214, 10, 0.05);
+  border: 1px solid rgba(255, 214, 10, 0.28);
+  border-radius: 8px;
+  padding: 10px 12px;
+  animation: k-fade 180ms ease-out;
+  position: relative;
+  transition: border-color 200ms;
+}
+/* Active listening pulse — faint border glow while Claude is analysing.
+   Doesn't flicker; just breathes so the user knows it's alive. */
+.klosr-live-coach.klosr-coach-thinking {
+  border-color: rgba(255, 214, 10, 0.65);
+  box-shadow: 0 0 12px rgba(255, 214, 10, 0.12);
+}
+.klosr-live-coach.klosr-coach-thinking::after {
+  content: "";
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #FFD60A;
+  animation: klosr-coach-pulse 900ms ease-in-out infinite;
+}
+@keyframes klosr-coach-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 214, 10, 0.55); }
+  50%      { opacity: 0.45; box-shadow: 0 0 0 5px rgba(255, 214, 10, 0); }
+}
+.klosr-coach-empty {
+  font-size: 12px;
+  color: rgba(244, 244, 245, 0.45);
+  font-style: italic;
+}
+.klosr-coach-topic {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 214, 10, 0.85);
+  margin-bottom: 6px;
+}
+.klosr-coach-next {
+  margin-top: 4px;
+}
+.klosr-coach-next-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  color: rgba(244, 244, 245, 0.50);
+  margin-bottom: 3px;
+}
+.klosr-coach-next-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F4F4F5;
+  line-height: 1.45;
+}
+.klosr-coach-insight {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: rgba(244, 244, 245, 0.70);
+  padding-top: 6px;
+  border-top: 1px dashed rgba(244, 244, 245, 0.08);
+}
+
+/* Objection alert */
+.klosr-live-alerts:empty { display: none; }
+.klosr-alert {
+  border-radius: 8px;
+  padding: 10px 12px;
+  animation: klosr-alert-in 260ms ease-out;
+}
+@keyframes klosr-alert-in {
+  0% { transform: translateY(-6px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.klosr-alert-objection {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.40);
+}
+.klosr-alert-head {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: #FCA5A5;
+  margin-bottom: 4px;
+}
+.klosr-alert-quote {
+  font-size: 12px;
+  font-style: italic;
+  color: rgba(244, 244, 245, 0.85);
+  margin-bottom: 6px;
+  line-height: 1.45;
+}
+.klosr-alert-reply {
+  font-size: 12.5px;
+  color: #F4F4F5;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* Commitments tracker */
+.klosr-live-commits {
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.klosr-commit-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #6EE7B7;
+  margin-bottom: 4px;
+}
+.klosr-commit-list {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.klosr-commit-list li {
+  font-size: 12px;
+  color: #F4F4F5;
+  padding: 3px 0;
+  line-height: 1.45;
+}
+.klosr-commit-list li::before {
+  content: "✓";
+  color: #6EE7B7;
+  margin-right: 6px;
+  font-weight: 700;
+}
+
+/* Transcript disclosure */
+.klosr-live-transcript-wrap {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.klosr-live-transcript-wrap summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(244, 244, 245, 0.60);
+  text-transform: uppercase;
+  user-select: none;
+}
+.klosr-live-transcript-wrap summary::-webkit-details-marker { display: none; }
+.klosr-live-transcript-wrap summary::before { content: "▸ "; }
+.klosr-live-transcript-wrap[open] summary::before { content: "▾ "; }
+.klosr-live-transcript {
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 4px 12px 10px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: rgba(244, 244, 245, 0.82);
+}
+.klosr-transcript-empty {
+  font-style: italic;
+  color: rgba(244, 244, 245, 0.35);
+  padding: 4px 0;
+}
+.klosr-t-final { margin-bottom: 3px; }
+.klosr-t-interim {
+  color: rgba(244, 244, 245, 0.42);
+  font-style: italic;
+}
+
+.klosr-live-foot {
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
+}
+.klosr-live-stop-btn {
+  background: rgba(239, 68, 68, 0.10) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #FCA5A5 !important;
+  padding: 6px 14px !important;
+}
+
+/* ───── Post-call summary ───── */
+.klosr-summary-head {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFD60A;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.klosr-summary-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.klosr-summary-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 245, 0.55);
+  margin-bottom: 6px;
+}
+.klosr-summary-section ul {
+  margin: 0; padding: 0 0 0 16px;
+  font-size: 12.5px;
+  color: #F4F4F5;
+  line-height: 1.55;
+}
+.klosr-summary-section li { margin-bottom: 3px; }
+.klosr-summary-next {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.30);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: #F4F4F5;
+  line-height: 1.5;
+}
+.klosr-summary-next strong { color: #6EE7B7; margin-right: 4px; }
+.klosr-summary-email .klosr-email-sub {
+  font-size: 12px;
+  color: rgba(244, 244, 245, 0.80);
+  margin-bottom: 6px;
+}
+.klosr-summary-email .klosr-email-sub strong { color: rgba(244, 244, 245, 0.55); }
+.klosr-summary-email .klosr-email-body {
+  font-size: 12px;
+  color: #F4F4F5;
+  line-height: 1.55;
+  background: rgba(0, 0, 0, 0.20);
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.klosr-summary-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+@keyframes k-fade { 0% { opacity: 0; transform: translateY(-2px); } 100% { opacity: 1; transform: translateY(0); } }
+
+/* ───── Call health row — deal stage badge + talk ratio bar ───── */
+.klosr-live-health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.klosr-dealstage {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.klosr-stage-discovery    { background: rgba(147, 197, 253, 0.14); border: 1px solid rgba(147, 197, 253, 0.45); color: #BFDBFE; }
+.klosr-stage-objection    { background: rgba(251, 146, 60, 0.14);  border: 1px solid rgba(251, 146, 60, 0.45);  color: #FDBA74; }
+.klosr-stage-negotiation  { background: rgba(167, 139, 250, 0.14); border: 1px solid rgba(167, 139, 250, 0.45); color: #C4B5FD; }
+.klosr-stage-closing      { background: rgba(52, 211, 153, 0.14);  border: 1px solid rgba(52, 211, 153, 0.50);  color: #6EE7B7; }
+.klosr-stage-stalled      { background: rgba(156, 163, 175, 0.12); border: 1px solid rgba(156, 163, 175, 0.40); color: rgba(244,244,245,0.75); }
+.klosr-stage-offtrack     { background: rgba(239, 68, 68, 0.14);   border: 1px solid rgba(239, 68, 68, 0.45);   color: #FCA5A5; }
+
+.klosr-talkratio {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.klosr-talkratio-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  min-width: 60px;
+}
+.klosr-talkratio-you  { background: #FFD60A; transition: width 400ms; }
+.klosr-talkratio-them { background: #6EE7B7; transition: width 400ms; }
+.klosr-tr-you-dominating .klosr-talkratio-you { background: #F87171; }
+.klosr-talkratio-nums {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(244, 244, 245, 0.70);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.klosr-tr-you-dominating .klosr-talkratio-nums { color: #FCA5A5; }
+.klosr-talkratio-swap {
+  all: unset;
+  font-size: 11px;
+  color: rgba(244, 244, 245, 0.45);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.klosr-talkratio-swap:hover { color: #FFD60A; background: rgba(255, 214, 10, 0.08); }
+
+/* ───── Pacing advice banner ───── */
+.klosr-pacing {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  color: #FCD34D;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  animation: k-fade 200ms ease-out;
+}
+
+/* ───── Buying signal panel (green urgency) ───── */
+.klosr-live-buying {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.42);
+  border-left: 3px solid #34D399;
+  border-radius: 8px;
+  padding: 10px 12px;
+  animation: klosr-alert-in 260ms ease-out;
+}
+.klosr-buying-strong { border-color: #34D399; box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.20); }
+.klosr-buying-weak { opacity: 0.8; }
+.klosr-buying-head {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: #6EE7B7;
+  margin-bottom: 4px;
+}
+.klosr-buying-text {
+  font-size: 12.5px;
+  color: #F4F4F5;
+  line-height: 1.45;
+}
+
+/* ───── Proof-to-cite card ───── */
+.klosr-live-proof {
+  background: rgba(147, 197, 253, 0.06);
+  border: 1px solid rgba(147, 197, 253, 0.30);
+  border-radius: 8px;
+  padding: 10px 12px;
+  animation: k-fade 220ms ease-out;
+}
+.klosr-proof-head {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: #BFDBFE;
+  margin-bottom: 4px;
+}
+.klosr-proof-reason {
+  font-size: 11px;
+  color: rgba(244, 244, 245, 0.65);
+  margin-bottom: 6px;
+  font-style: italic;
+}
+.klosr-proof-card {
+  background: rgba(0, 0, 0, 0.15);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 2px solid rgba(147, 197, 253, 0.55);
+}
+.klosr-proof-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #F4F4F5;
+  margin-bottom: 2px;
+}
+.klosr-proof-metric {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #93C5FD;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.klosr-proof-body {
+  font-size: 11.5px;
+  color: rgba(244, 244, 245, 0.80);
+  line-height: 1.5;
+}
+
+/* ───── Competitor mention alert ───── */
+.klosr-live-competitor {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.38);
+  border-radius: 8px;
+  padding: 10px 12px;
+  animation: klosr-alert-in 260ms ease-out;
+}
+.klosr-competitor-head {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #FCA5A5;
+  margin-bottom: 4px;
+}
+.klosr-competitor-angle {
+  font-size: 12px;
+  color: #F4F4F5;
+  line-height: 1.45;
+}
+
+/* ───── Predicted questions panel ───── */
+.klosr-live-ask-next {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.klosr-ask-next-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 245, 0.55);
+  margin-bottom: 6px;
+}
+.klosr-ask-next-list {
+  margin: 0; padding: 0 0 0 18px;
+  list-style: none;
+}
+.klosr-ask-next-list li {
+  font-size: 12px;
+  color: rgba(244, 244, 245, 0.85);
+  padding: 2px 0;
+  position: relative;
+  line-height: 1.45;
+}
+.klosr-ask-next-list li::before {
+  content: "→";
+  position: absolute;
+  left: -14px;
+  color: rgba(255, 214, 10, 0.60);
+  font-weight: 700;
+}
+
+/* ───── Speaker-tagged transcript ───── */
+.klosr-t-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-right: 6px;
+  opacity: 0.70;
+}
+.klosr-t-you { color: rgba(244, 244, 245, 0.95); }
+.klosr-t-you .klosr-t-label { color: #FFD60A; }
+.klosr-t-prospect { color: rgba(244, 244, 245, 0.82); }
+.klosr-t-prospect .klosr-t-label { color: #6EE7B7; }
+
+/* ════════════════════════════════════════════════════════════════════
+   Click-the-Klosr-icon prompt
+   Shown when chrome.tabCapture returns "Extension has not been invoked
+   for the current page" — needs explicit toolbar icon click to grant
+   activeTab. Arrow points up-right toward Chrome's extensions area.
+   ════════════════════════════════════════════════════════════════════ */
+.klosr-icon-prompt {
+  position: relative;
+  padding: 20px 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(155deg, rgba(124, 58, 237, 0.18), rgba(99, 102, 241, 0.10));
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  box-shadow: 0 10px 28px -14px rgba(124, 58, 237, 0.55);
+  color: #F4F4F5;
+  font-family: inherit;
+}
+.klosr-icon-prompt-arrow {
+  position: absolute;
+  top: -14px;
+  right: 18px;
+  font-size: 40px;
+  line-height: 1;
+  color: #A78BFA;
+  text-shadow: 0 0 16px rgba(124, 58, 237, 0.95), 0 2px 6px rgba(0, 0, 0, 0.35);
+  transform: rotate(-12deg);
+  animation: klosr-arrow-bounce 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes klosr-arrow-bounce {
+  0%, 100% { transform: rotate(-12deg) translateY(0); }
+  50%      { transform: rotate(-12deg) translateY(-7px); }
+}
+.klosr-icon-prompt-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  padding-right: 36px;   /* avoid clipping against the arrow */
+}
+.klosr-icon-prompt-sub {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(244, 244, 245, 0.82);
+  margin-bottom: 14px;
+}
+.klosr-icon-prompt-sub strong {
+  color: #A78BFA;
+  font-weight: 700;
+}
+.klosr-icon-prompt-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.klosr-icon-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(244, 244, 245, 0.90);
+}
+.klosr-icon-step strong {
+  color: #FFFFFF;
+  font-weight: 700;
+}
+.klosr-icon-step-num {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #A78BFA);
+  color: #FFFFFF;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 18px;
+  margin-top: 1px;
+}
+.klosr-icon-prompt-waiting {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #C4B5FD;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px dashed rgba(167, 139, 250, 0.38);
+}
+.klosr-icon-prompt-spinner {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(167, 139, 250, 0.22);
+  border-top-color: #A78BFA;
+  animation: klosr-spinner 0.85s linear infinite;
+}
+@keyframes klosr-spinner {
+  to { transform: rotate(360deg); }
+}

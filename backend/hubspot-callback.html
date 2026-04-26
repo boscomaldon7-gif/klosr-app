@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Klosr · Connecting HubSpot</title>
+  <meta name="theme-color" content="#0A0A0B">
+  <style>
+    html, body { margin: 0; padding: 0; background: #0A0A0B; color: #F4F4F5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100vh; }
+    body { display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .card { max-width: 440px; width: 100%; padding: 28px; background: linear-gradient(160deg, #18181B, #27272A); border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 16px; text-align: center; }
+    h1 { font-size: 22px; margin: 0 0 8px; color: #FFD60A; letter-spacing: -0.01em; }
+    p { color: rgba(244, 244, 245, 0.72); font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid rgba(255, 214, 10, 0.2); border-top-color: #FFD60A; border-radius: 50%; animation: spin 0.9s linear infinite; margin: 20px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ok   { color: #34D399; }
+    .err  { color: #F87171; }
+    .code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; color: rgba(244, 244, 245, 0.55); word-break: break-all; padding: 10px 12px; background: rgba(0, 0, 0, 0.35); border-radius: 8px; margin: 12px 0; }
+    a.btn { display: inline-block; padding: 10px 18px; background: linear-gradient(135deg, #FFD60A, #F59E0B); color: #0A0A0B; text-decoration: none; font-weight: 800; font-size: 14px; border-radius: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="content">
+      <h1>Connecting HubSpot to Klosr…</h1>
+      <div class="spinner"></div>
+      <p>Hold on while we finish the handshake.</p>
+    </div>
+  </div>
+
+  <script>
+    // Klosr HubSpot OAuth callback. Receives `?code=&state=` from HubSpot,
+    // decodes state to recover installId, exchanges the code via our backend.
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const code = params.get("code");
+      const state = params.get("state") || "";
+      const error = params.get("error");
+      const contentEl = document.getElementById("content");
+
+      if (error) {
+        contentEl.innerHTML = `
+          <h1 class="err">Connection failed</h1>
+          <p>${error === "access_denied" ? "You declined the HubSpot permissions." : "HubSpot returned an error: " + error}</p>
+          <a class="btn" href="/app.html">← Back to Klosr</a>
+        `;
+        return;
+      }
+
+      if (!code || !state) {
+        contentEl.innerHTML = `
+          <h1 class="err">Missing auth code</h1>
+          <p>HubSpot didn't return the expected parameters. Please try connecting again from the Klosr Desktop Integrations page.</p>
+          <a class="btn" href="/app.html">← Back to Klosr</a>
+        `;
+        return;
+      }
+
+      let installId = "";
+      try {
+        const decoded = JSON.parse(atob(state.replace(/-/g, "+").replace(/_/g, "/")));
+        installId = decoded.installId || "";
+      } catch {/* empty installId stays */}
+
+      if (!installId) {
+        contentEl.innerHTML = `
+          <h1 class="err">Couldn't identify your Klosr install</h1>
+          <p>The state parameter didn't include a valid install ID. Try reconnecting from Klosr Desktop.</p>
+          <a class="btn" href="/app.html">← Back to Klosr</a>
+        `;
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/intel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "hubspot-oauth-exchange",
+            params: { code, installId },
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (data.ok && data.connected) {
+          contentEl.innerHTML = `
+            <h1 class="ok">✓ HubSpot connected</h1>
+            <p>Klosr can now push deals straight into your HubSpot portal. Every deal you close in Klosr will sync as a new contact + opportunity.</p>
+            <a class="btn" href="/app.html">Back to Klosr Desktop →</a>
+          `;
+          // Auto-close after 3s if opened as a popup
+          setTimeout(() => { try { window.close(); } catch {} }, 3000);
+        } else {
+          contentEl.innerHTML = `
+            <h1 class="err">Connection failed</h1>
+            <p>HubSpot accepted the code but Klosr couldn't store the tokens.</p>
+            <div class="code">${(data.reason || "unknown_error")}</div>
+            <a class="btn" href="/app.html">← Try again</a>
+          `;
+        }
+      } catch (e) {
+        contentEl.innerHTML = `
+          <h1 class="err">Network error</h1>
+          <p>Klosr backend didn't respond. Try again in a moment.</p>
+          <div class="code">${e.message || "unknown"}</div>
+          <a class="btn" href="/app.html">← Back to Klosr</a>
+        `;
+      }
+    })();
+  </script>
+</body>
+</html>

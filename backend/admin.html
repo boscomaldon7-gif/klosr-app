@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klosr Admin</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0A0A0B; color: #F4F4F5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { min-height: 100vh; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 30px 24px 60px; }
+
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    h1 { font-size: 22px; margin: 0; color: #FFD60A; letter-spacing: -0.01em; }
+    h1 small { color: rgba(244,244,245,0.45); font-size: 12px; font-weight: 400; margin-left: 12px; letter-spacing: 0.04em; }
+
+    .btn { background: rgba(255,214,10,0.12); border: 1px solid rgba(255,214,10,0.4); color: #FFD60A;
+           font-family: inherit; font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 7px; cursor: pointer; transition: filter 120ms; }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:disabled { opacity: 0.5; cursor: wait; }
+
+    /* Login screen */
+    .login { max-width: 340px; margin: 120px auto; padding: 28px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+    .login h2 { color: #FFD60A; margin: 0 0 16px; font-size: 18px; }
+    .login input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; color: #F4F4F5; font-family: inherit; font-size: 14px; }
+    .login input:focus { outline: none; border-color: #FFD60A; }
+    .login .btn { width: 100%; margin-top: 12px; padding: 10px; font-size: 14px; }
+    .login-error { color: #F87171; font-size: 12px; margin-top: 8px; }
+
+    /* Stat cards */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat { padding: 16px 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; }
+    .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244,244,245,0.55); margin-bottom: 6px; }
+    .stat-value { font-size: 28px; font-weight: 800; color: #FFD60A; font-variant-numeric: tabular-nums; line-height: 1.1; }
+    .stat-sub { font-size: 11px; color: rgba(244,244,245,0.45); margin-top: 4px; }
+
+    section { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+    section h2 { font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(244,244,245,0.70); margin: 0; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15); }
+
+    /* Features grid */
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; padding: 16px 18px; }
+    .feature { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px; }
+    .feature-name { color: rgba(244,244,245,0.80); font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Menlo, monospace; }
+    .feature-count { font-weight: 700; color: #FFD60A; font-variant-numeric: tabular-nums; }
+
+    /* Daily activity sparkline */
+    .activity-strip { display: flex; gap: 4px; align-items: flex-end; padding: 16px 18px; height: 110px; }
+    .activity-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+    .activity-bar { width: 100%; background: rgba(255,214,10,0.25); border-radius: 3px 3px 0 0; transition: background 120ms; min-height: 3px; }
+    .activity-bar:hover { background: #FFD60A; }
+    .activity-bar[data-today="1"] { background: #FFD60A; box-shadow: 0 0 10px rgba(255,214,10,0.45); }
+    .activity-label { font-size: 10px; color: rgba(244,244,245,0.40); text-align: center; margin-top: 6px; }
+
+    /* Users table */
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th, td { padding: 8px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    th { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244,244,245,0.50); background: rgba(0,0,0,0.15); position: sticky; top: 0; }
+    tbody tr:hover { background: rgba(255,214,10,0.04); }
+    .mono { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; color: rgba(244,244,245,0.55); }
+    .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 999px; background: rgba(147,197,253,0.12); color: #BFDBFE; font-weight: 600; }
+    .tag-hot { background: rgba(52,211,153,0.14); color: #6EE7B7; }
+
+    /* Event log */
+    .events { padding: 6px 0; max-height: 440px; overflow-y: auto; }
+    .event-row { display: grid; grid-template-columns: 80px 140px 1fr 160px; gap: 12px; padding: 6px 18px; font-size: 11.5px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .event-row:hover { background: rgba(255,255,255,0.02); }
+    .event-time { color: rgba(244,244,245,0.45); font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; }
+    .event-name { font-weight: 700; color: #FFD60A; font-family: ui-monospace, monospace; }
+    .event-meta { color: rgba(244,244,245,0.65); word-break: break-word; }
+    .event-user { color: rgba(244,244,245,0.45); font-family: ui-monospace, monospace; text-align: right; }
+
+    .empty { text-align: center; padding: 40px; color: rgba(244,244,245,0.40); font-style: italic; font-size: 12px; }
+    .error { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.35); color: #FCA5A5; padding: 14px 18px; border-radius: 10px; font-size: 13px; }
+
+    @media (max-width: 700px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .event-row { grid-template-columns: 60px 1fr; }
+      .event-row .event-user, .event-row .event-meta { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // ─────────── Endpoint configuration ───────────
+    // Admin dashboard calls the same /api/intel dispatcher as the extension,
+    // with action: "admin-stats" + password. Password is kept in sessionStorage
+    // (cleared when the browser tab closes) — not localStorage, for safety.
+    const INTEL_URL = "/api/intel";
+    const PW_KEY = "klosr_admin_pw";
+
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function fmtRelative(ms) {
+      if (!ms) return "—";
+      const sec = (Date.now() - Number(ms)) / 1000;
+      if (sec < 60) return Math.round(sec) + "s ago";
+      if (sec < 3600) return Math.round(sec / 60) + "m ago";
+      if (sec < 86400) return Math.round(sec / 3600) + "h ago";
+      return Math.round(sec / 86400) + "d ago";
+    }
+
+    function fmtTime(ts) {
+      const d = new Date(Number(ts) || 0);
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      return hh + ":" + mm;
+    }
+
+    async function fetchStats(pw) {
+      const res = await fetch(INTEL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "admin-stats", params: { password: pw } }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }
+
+    function renderLogin(errorMsg) {
+      document.getElementById("app").innerHTML = `
+        <div class="login">
+          <h2>Klosr Admin</h2>
+          <form id="login-form">
+            <input type="password" id="pw" placeholder="Admin password" autofocus />
+            <button class="btn" type="submit">Enter</button>
+            ${errorMsg ? `<div class="login-error">${esc(errorMsg)}</div>` : ""}
+          </form>
+        </div>
+      `;
+      document.getElementById("login-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const pw = document.getElementById("pw").value;
+        const data = await fetchStats(pw).catch(() => ({ ok: false, reason: "network" }));
+        if (data && data.ok) {
+          sessionStorage.setItem(PW_KEY, pw);
+          renderDashboard(data);
+        } else {
+          renderLogin(
+            data?.reason === "unauthorized" ? "Wrong password."
+            : data?.reason === "upstash_not_configured" ? "Upstash not configured server-side."
+            : "Couldn't fetch stats."
+          );
+        }
+      });
+    }
+
+    function renderDashboard(data) {
+      const o = data.overview || {};
+      const f7 = data.features7d || {};
+      const f30 = data.features30d || {};
+      const users = data.users || [];
+      const events = data.recentEvents || [];
+
+      // Daily activity bars (reverse so oldest → newest)
+      const daily = [...(o.dailyActive || [])].reverse();
+      const maxDaily = Math.max(1, ...daily.map(d => d.count));
+      const barsHtml = daily.map((d, i) => {
+        // Scale: max bar height ~80px of the 110px strip (labels take ~20px,
+        // padding takes the rest). Bars with count>0 get at least 10px so
+        // they're actually visible; count=0 gets a faint 3px floor bar.
+        const pct = maxDaily > 0 ? (d.count / maxDaily) : 0;
+        const h = d.count > 0 ? Math.max(10, Math.round(pct * 80)) : 3;
+        const isToday = i === daily.length - 1;
+        const dayLabel = d.date.slice(5);
+        return `<div class="activity-col">
+          <div class="activity-bar" style="height:${h}px" data-today="${isToday ? 1 : 0}" title="${d.date}: ${d.count}"></div>
+          <div class="activity-label">${dayLabel}</div>
+        </div>`;
+      }).join("");
+
+      // Feature usage rows — sort by 7d count desc
+      const featureOrder = Object.keys(f7).sort((a, b) => (f7[b] || 0) - (f7[a] || 0));
+      const featuresHtml = featureOrder.map(k => `
+        <div class="feature">
+          <span class="feature-name">${esc(k)}</span>
+          <span class="feature-count">${f7[k] || 0}<span style="opacity:0.4; font-weight:400; margin-left:5px">/ ${f30[k] || 0}</span></span>
+        </div>
+      `).join("");
+
+      // Users — sort by eventCount desc
+      const userRows = users
+        .filter(u => Number(u.eventCount) > 0)
+        .sort((a, b) => Number(b.eventCount) - Number(a.eventCount))
+        .map((u, i) => {
+          const isRecent = u.lastSeen && (Date.now() - Number(u.lastSeen)) < 86400000;
+          const identity = u.yourName || u.email || u.companyName
+            ? `<strong>${esc(u.yourName || u.email || "")}</strong>${u.companyName ? ` <span style="color:rgba(244,244,245,0.55)">· ${esc(u.companyName)}</span>` : ""}`
+            : `<span class="mono">${esc(u.installId).slice(0, 12)}…</span>`;
+          const icp = u.icp ? esc(u.icp).slice(0, 100) + (u.icp.length > 100 ? "…" : "") : "—";
+          return `
+            <tr>
+              <td style="color:rgba(244,244,245,0.45);font-weight:700">${i + 1}</td>
+              <td>${identity}</td>
+              <td style="color:rgba(244,244,245,0.70)">${esc(u.yourRole || "")}</td>
+              <td style="color:rgba(244,244,245,0.55);font-size:11px">${esc(icp)}</td>
+              <td style="font-weight:700;color:#FFD60A">${u.eventCount || 0}</td>
+              <td>${fmtRelative(u.lastSeen)} ${isRecent ? '<span class="tag tag-hot">active</span>' : ''}</td>
+              <td style="color:rgba(244,244,245,0.55)">${esc(u.lastEvent || "")}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      // Events log — already newest-first from Redis LRANGE
+      const eventsHtml = events.slice(0, 100).map(e => {
+        const user = users.find(u => u.installId === e.installId);
+        const identity = user?.yourName || user?.email || (e.installId || "").slice(0, 10) + "…";
+        const metaStr = e.metadata && Object.keys(e.metadata).length
+          ? Object.entries(e.metadata).slice(0, 4).map(([k, v]) => `${k}=${typeof v === "string" ? v.slice(0, 40) : v}`).join("  ")
+          : "";
+        return `
+          <div class="event-row">
+            <div class="event-time">${fmtTime(e.ts)}</div>
+            <div class="event-name">${esc(e.event)}</div>
+            <div class="event-meta">${esc(metaStr)}</div>
+            <div class="event-user">${esc(identity)}</div>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("app").innerHTML = `
+        <div class="wrap">
+          <header>
+            <h1>Klosr Admin <small>· generated ${fmtRelative(new Date(data.generatedAt).getTime())}</small></h1>
+            <div>
+              <button class="btn" id="refresh">⟳ Refresh</button>
+              <button class="btn" id="logout" style="background:transparent;color:rgba(244,244,245,0.55);border-color:rgba(244,244,245,0.15);margin-left:6px">Log out</button>
+            </div>
+          </header>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">Total Users</div>
+              <div class="stat-value">${o.totalUsers || 0}</div>
+              <div class="stat-sub">Unique installs</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Active Today</div>
+              <div class="stat-value">${o.dau || 0}</div>
+              <div class="stat-sub">DAU</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Active This Week</div>
+              <div class="stat-value">${o.wau || 0}</div>
+              <div class="stat-sub">Weekly activity (may over-count)</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Total Events</div>
+              <div class="stat-value">${(o.totalEvents || 0).toLocaleString()}</div>
+              <div class="stat-sub">All-time</div>
+            </div>
+          </div>
+
+          <section>
+            <h2>Daily activity (last 7 days)</h2>
+            <div class="activity-strip">${barsHtml || `<div class="empty">No activity yet.</div>`}</div>
+          </section>
+
+          <section>
+            <h2>Feature usage · <span style="font-weight:400;opacity:0.55;text-transform:none;letter-spacing:0">7 days / 30 days</span></h2>
+            <div class="features">
+              ${featuresHtml || `<div class="empty">No events tracked yet.</div>`}
+            </div>
+          </section>
+
+          <section>
+            <h2>Users (${users.length})</h2>
+            ${userRows ? `
+              <div style="overflow-x:auto">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th><th>Identity</th><th>Role</th><th>ICP</th><th>Events</th><th>Last seen</th><th>Last action</th>
+                    </tr>
+                  </thead>
+                  <tbody>${userRows}</tbody>
+                </table>
+              </div>
+            ` : `<div class="empty">No users yet.</div>`}
+          </section>
+
+          <section>
+            <h2>Recent events (${events.length})</h2>
+            <div class="events">
+              ${eventsHtml || `<div class="empty">No events yet.</div>`}
+            </div>
+          </section>
+        </div>
+      `;
+
+      document.getElementById("refresh").addEventListener("click", async () => {
+        const btn = document.getElementById("refresh");
+        btn.disabled = true; btn.textContent = "Loading...";
+        const pw = sessionStorage.getItem(PW_KEY);
+        const fresh = await fetchStats(pw).catch(() => null);
+        if (fresh && fresh.ok) renderDashboard(fresh);
+        else { btn.disabled = false; btn.textContent = "⟳ Refresh"; }
+      });
+      document.getElementById("logout").addEventListener("click", () => {
+        sessionStorage.removeItem(PW_KEY);
+        renderLogin();
+      });
+    }
+
+    // Boot — try sessionStorage password first.
+    (async () => {
+      const pw = sessionStorage.getItem(PW_KEY);
+      if (!pw) { renderLogin(); return; }
+      const data = await fetchStats(pw).catch(() => null);
+      if (data && data.ok) renderDashboard(data);
+      else { sessionStorage.removeItem(PW_KEY); renderLogin(); }
+    })();
+  </script>
+</body>
+</html>

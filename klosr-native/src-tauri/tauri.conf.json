@@ -1,0 +1,119 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Klosr",
+  "version": "0.3.5",
+  "identifier": "com.klosr.desktop",
+
+  "build": {
+    "frontendDist": "../src"
+  },
+
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Klosr",
+        "url": "main.html",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 880,
+        "minHeight": 560,
+        "resizable": true,
+        "center": true,
+        "decorations": false,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "fullscreen": false,
+        "visible": true,
+        "focus": true
+      },
+      {
+        "label": "overlay",
+        "title": "Klosr",
+        "url": "index.html",
+        "width": 540,
+        "height": 92,
+        "minWidth": 480,
+        "minHeight": 92,
+        "maxWidth": 720,
+        "resizable": true,
+        "center": false,
+        "x": 100,
+        "y": 60,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "fullscreen": false,
+        "visible": false,
+        "focus": false,
+        "additionalBrowserArgs": "--disable-features=ElasticOverscroll"
+      }
+    ],
+    "security": {
+      "csp": null,
+      "dangerousDisableAssetCspModification": false
+    },
+    "trayIcon": {
+      "id": "klosr-tray",
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false,
+      "tooltip": "Klosr — Sales OS for Founders"
+    },
+    "withGlobalTauri": true
+  },
+
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis", "deb", "appimage", "dmg"],
+    "category": "Productivity",
+    "shortDescription": "Sales co-pilot — reads your screen, drafts replies in your voice.",
+    "longDescription": "Klosr is the sales co-pilot for B2B founders. Watch mode reads your screen with Claude Opus 4.7 multimodal and drafts replies in your voice across LinkedIn, WhatsApp, Gmail, Slack, Teams, Sales Nav, and any other app on your screen. Built by founders, for founders.",
+    "copyright": "© 2026 Klosr · Bosco Maldonado Arias",
+    "publisher": "Klosr",
+    "homepage": "https://klosr.com",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "tsp": false,
+      "wix": {
+        "language": "en-US"
+      },
+      "nsis": {
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "installMode": "currentUser"
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "exceptionDomain": "backend-kappa-nine-57.vercel.app",
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": "entitlements.plist"
+    },
+    "linux": {
+      "deb": { "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"] }
+    }
+  },
+
+  "plugins": {
+    "updater": {
+      "active": false,
+      "pubkey": "REPLACE_WITH_GENERATED_PUBKEY_BEFORE_ENABLING",
+      "endpoints": [
+        "https://backend-kappa-nine-57.vercel.app/updater/{{target}}/{{current_version}}"
+      ]
+    }
+  }
+}

@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Klosr</title>
+  <link rel="icon" type="image/png" href="./icons/icon128.png">
+  <style>
+    /* ════════════════════════════════════════════════════════════════
+       KLOSR MAIN APP — Cluely-style with Klosr gold/black branding
+       ════════════════════════════════════════════════════════════════ */
+
+    :root {
+      --gold:        #FFD60A;
+      --gold-dark:   #F59E0B;
+      --gold-soft:   rgba(255, 214, 10, 0.12);
+      --bg:          #FFFFFF;
+      --bg-soft:     #FAFAFA;
+      --bg-card:     #F4F4F5;
+      --bg-dark:     #0A0A0B;
+      --bg-overlay:  #1A1A1C;
+      --line:        rgba(0, 0, 0, 0.06);
+      --line-strong: rgba(0, 0, 0, 0.10);
+      --text:        #0A0A0B;
+      --text-muted:  rgba(10, 10, 11, 0.55);
+      --text-faint:  rgba(10, 10, 11, 0.35);
+      --blue:        #2563EB;
+      --green:       #22C55E;
+      --red:         #EF4444;
+      --radius-sm:   8px;
+      --radius:      14px;
+      --radius-lg:   20px;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow:      0 8px 24px -8px rgba(0,0,0,0.10), 0 4px 8px -4px rgba(0,0,0,0.06);
+      --shadow-lg:   0 24px 48px -16px rgba(0,0,0,0.18), 0 12px 24px -12px rgba(0,0,0,0.10);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    body { display: flex; flex-direction: column; }
+
+    /* ─── Buttons ──────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 16px;
+      font-family: inherit; font-size: 13.5px; font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line-strong);
+      background: #FFFFFF;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.14s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--bg-soft); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn .ico { font-size: 14px; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: var(--bg-dark);
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.30) inset, 0 4px 10px -2px rgba(255,214,10,0.45);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.05);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.30) inset, 0 6px 14px -2px rgba(255,214,10,0.55);
+    }
+    .btn-blue {
+      background: linear-gradient(135deg, #3B82F6, #2563EB);
+      color: #FFFFFF;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 10px -2px rgba(37,99,235,0.40);
+    }
+    .btn-blue:hover { filter: brightness(1.06); }
+    .btn-ghost { background: transparent; border-color: transparent; color: var(--text-muted); }
+    .btn-ghost:hover { background: var(--bg-card); color: var(--text); }
+    .btn-danger { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.30); color: var(--red); }
+    .btn-danger:hover { background: rgba(239,68,68,0.15); }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 8px 14px;
+      font-size: 13px; font-weight: 500;
+      background: var(--bg);
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.12s;
+      user-select: none;
+    }
+    .chip:hover { border-color: var(--text-faint); background: var(--bg-soft); }
+    .chip.active {
+      background: var(--bg-dark);
+      color: #FFFFFF;
+      border-color: var(--bg-dark);
+    }
+
+    /* ─── Title bar (custom drag region) ──────────────────────────── */
+    .titlebar {
+      height: 38px;
+      display: flex; align-items: center;
+      padding: 0 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      -webkit-app-region: drag;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .titlebar .nav-back, .titlebar .nav-fwd {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      -webkit-app-region: no-drag;
+      transition: background 0.12s;
+      font-size: 14px;
+    }
+    .titlebar .nav-back:hover, .titlebar .nav-fwd:hover { background: var(--bg-card); color: var(--text); }
+    .titlebar .search-wrap {
+      flex: 1;
+      display: flex; justify-content: center;
+      -webkit-app-region: no-drag;
+    }
+    .titlebar .search {
+      width: 100%; max-width: 480px;
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 12px;
+      background: var(--bg-card);
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .titlebar .search:hover { background: #ECECED; }
+    .titlebar .search input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: inherit; font-size: 13px; color: var(--text);
+    }
+    .titlebar .right {
+      display: flex; align-items: center; gap: 4px;
+      -webkit-app-region: no-drag;
+    }
+    .titlebar .avatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--bg-dark); font-weight: 800; font-size: 11px;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; margin-right: 4px;
+    }
+    .titlebar .win-btn {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.12s;
+      font-size: 14px;
+    }
+    .titlebar .win-btn:hover { background: var(--bg-card); color: var(--text); }
+    .titlebar .win-btn.close:hover { background: var(--red); color: #FFFFFF; }
+
+    /* ─── App shell ────────────────────────────────────────────────── */
+    .app { flex: 1; display: flex; min-height: 0; }
+    .sidebar {
+      width: 232px;
+      flex-shrink: 0;
+      background: var(--bg-soft);
+      border-right: 1px solid var(--line);
+      padding: 10px 8px 8px;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar.hidden { display: none; }
+    .sidebar-section {
+      margin-bottom: 18px;
+    }
+    .sidebar-label {
+      padding: 6px 10px;
+      font-size: 10.5px; font-weight: 700;
+      color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 10px;
+      margin-bottom: 1px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13.5px;
+      transition: all 0.10s;
+    }
+    .nav-item:hover { background: var(--bg-card); color: var(--text); }
+    .nav-item.active { background: var(--bg-dark); color: #FFFFFF; font-weight: 600; }
+    .nav-item.active .nav-ico { color: var(--gold); }
+    .nav-ico {
+      width: 18px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .nav-item.active .nav-ico { color: var(--gold); }
+    .sidebar-foot {
+      margin-top: auto;
+      padding: 8px 4px 4px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* ─── Main content ─────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ─── Onboarding (full-screen) ─────────────────────────────────── */
+    .onb-shell {
+      flex: 1; display: flex;
+      background: var(--bg);
+    }
+    .onb-shell .col-left {
+      flex: 1;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 60px 80px;
+      max-width: 50%;
+    }
+    .onb-shell .col-right {
+      flex: 1;
+      background: linear-gradient(135deg, #FAFAFA 0%, #F4F4F5 100%);
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(255, 214, 10, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 75% 75%, rgba(37, 99, 235, 0.04) 0%, transparent 40%);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 60px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .onb-shell .col-right::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+    }
+
+    .brand-mark {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 18px;
+    }
+    .brand-mark .logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--bg-dark); font-weight: 900; font-size: 18px;
+      box-shadow: 0 4px 12px -2px rgba(255, 214, 10, 0.45);
+    }
+    .brand-mark .name {
+      font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+    }
+
+    .onb-shell h1 {
+      font-size: 38px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1;
+      margin: 0 0 14px;
+    }
+    .onb-shell .lede {
+      font-size: 16px; color: var(--text-muted);
+      margin: 0 0 32px;
+      max-width: 460px;
+    }
+    .onb-shell .cta-row { display: flex; gap: 10px; align-items: center; }
+    .onb-shell .legal {
+      margin-top: 24px;
+      font-size: 11.5px; color: var(--text-faint);
+    }
+    .onb-shell .legal a { color: var(--text-muted); text-decoration: none; }
+    .onb-shell .legal a:hover { color: var(--text); text-decoration: underline; }
+
+    .press-row {
+      display: flex; gap: 22px; align-items: center;
+      margin-top: 28px;
+      opacity: 0.55;
+      filter: grayscale(1);
+    }
+    .press-row .src {
+      font-family: "Times New Roman", serif;
+      font-size: 14px; font-style: italic;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+    }
+    .press-row .src.bold { font-family: -apple-system, sans-serif; font-style: normal; font-weight: 800; letter-spacing: -0.02em; }
+
+    /* ─── Onboarding right-side preview (live capsule mock) ──────── */
+    .preview-wrap {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      max-width: 520px; width: 100%;
+    }
+    .preview-cap {
+      display: flex; align-items: center; gap: 4px;
+      padding: 6px 8px 6px 12px;
+      background: rgba(15, 15, 18, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      backdrop-filter: blur(20px);
+      color: #F4F4F5;
+      font-size: 12px;
+      box-shadow: var(--shadow-lg);
+    }
+    .preview-cap .l {
+      width: 18px; height: 18px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      border-radius: 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--bg-dark); font-weight: 900; font-size: 11px;
+      margin-right: 4px;
+    }
+    .preview-cap .pill {
+      padding: 4px 9px; background: rgba(255,255,255,0.08); border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .preview-cap .pill.primary { background: rgba(255, 214, 10, 0.20); color: var(--gold); }
+    .preview-panel {
+      margin-top: 8px; width: 100%;
+      background: rgba(15, 15, 18, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      padding: 14px 16px;
+      color: #F4F4F5;
+      box-shadow: var(--shadow-lg);
+    }
+    .preview-panel .q {
+      display: flex; justify-content: flex-end; margin-bottom: 8px;
+    }
+    .preview-panel .q span {
+      padding: 7px 13px;
+      background: linear-gradient(135deg, #1D4ED8, #2563EB);
+      color: #FFFFFF; font-size: 12px; font-weight: 600;
+      border-radius: 16px 16px 4px 16px;
+    }
+    .preview-panel .src-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10.5px; color: rgba(244, 244, 245, 0.55);
+      margin-bottom: 6px;
+    }
+    .preview-panel .src-row .badge {
+      padding: 2px 7px; border-radius: 4px;
+      background: rgba(255, 214, 10, 0.10); color: var(--gold);
+      font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 9.5px;
+    }
+    .preview-panel .a {
+      font-size: 12.5px; line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .preview-panel .actions {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .preview-panel .actions .a-link {
+      font-size: 11.5px; color: rgba(244, 244, 245, 0.78);
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .preview-panel .ask {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px 6px 12px;
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      font-size: 12px; color: rgba(244, 244, 245, 0.40);
+    }
+    .preview-panel .ask .send {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: #FFFFFF; font-size: 11px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .preview-tagline {
+      margin-top: 24px;
+      font-size: 17px; font-weight: 700; line-height: 1.35;
+      color: var(--text); text-align: center;
+    }
+    .preview-tagline em { color: var(--blue); font-style: normal; }
+
+    /* ─── Verify code ──────────────────────────────────────────────── */
+    .verify-card {
+      width: 100%; max-width: 460px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 36px 36px 30px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .verify-card h2 { margin: 0 0 6px; font-size: 22px; font-weight: 800; }
+    .verify-card .sub { font-size: 13.5px; color: var(--text-muted); margin: 0 0 4px; }
+    .verify-card .email { font-size: 13.5px; color: var(--text); font-weight: 600; margin-bottom: 22px; }
+    .code-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; }
+    .code-row input {
+      width: 48px; height: 56px;
+      text-align: center;
+      font-size: 22px; font-weight: 700;
+      background: var(--bg);
+      border: 1.5px solid var(--line-strong);
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.12s;
+      caret-color: var(--gold);
+    }
+    .code-row input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+    .verify-card .resend {
+      font-size: 13px; color: var(--blue); margin: 8px 0 22px;
+      cursor: pointer; user-select: none;
+    }
+    .verify-card .resend.disabled { color: var(--text-faint); cursor: default; }
+
+    /* ─── Tell us more (chips) ─────────────────────────────────────── */
+    .form-section { width: 100%; max-width: 480px; margin-bottom: 28px; }
+    .form-section h3 {
+      margin: 0 0 12px;
+      font-size: 14px; font-weight: 700; color: var(--text);
+    }
+    .chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* ─── Which fits cards ─────────────────────────────────────────── */
+    .fits-list { width: 100%; max-width: 520px; }
+    .fits-card {
+      display: flex; align-items: center; gap: 16px;
+      padding: 18px 22px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+    .fits-card:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .fits-card.active {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-soft);
+    }
+    .fits-card .ico {
+      width: 44px; height: 44px;
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--gold-soft);
+      color: var(--gold-dark);
+      border-radius: 12px;
+      font-size: 20px;
+    }
+    .fits-card .body { flex: 1; min-width: 0; }
+    .fits-card .body .t { font-size: 15px; font-weight: 700; }
+    .fits-card .body .s { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+    .fits-card .arrow { color: var(--text-faint); font-size: 16px; }
+
+    /* ─── Tutorial (pulse) ─────────────────────────────────────────── */
+    .pulse {
+      position: relative;
+      display: inline-flex;
+    }
+    .pulse::before, .pulse::after {
+      content: '';
+      position: absolute; inset: -8px;
+      border-radius: 50%;
+      background: var(--blue);
+      opacity: 0;
+      animation: pulse 1.6s ease-out infinite;
+      pointer-events: none;
+    }
+    .pulse::after { animation-delay: 0.8s; }
+    @keyframes pulse {
+      0% { opacity: 0.6; transform: scale(0.85); }
+      100% { opacity: 0; transform: scale(1.7); }
+    }
+
+    /* ─── Dashboard ────────────────────────────────────────────────── */
+    .page-pad { padding: 28px 32px 60px; }
+    .page-hd {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .page-hd h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+    .page-hd p { margin: 4px 0 0; color: var(--text-muted); font-size: 13.5px; }
+    .page-hd .right { display: flex; gap: 8px; align-items: center; }
+
+    .panel {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 16px;
+    }
+    .panel.flat { background: var(--bg-soft); }
+    .panel-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .panel-hd h3 { margin: 0; font-size: 16px; font-weight: 700; }
+    .panel-hd .meta { font-size: 12px; color: var(--text-muted); }
+
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    }
+    .stat-card {
+      padding: 16px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .stat-card .t { font-size: 11.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    .stat-card .v { font-size: 26px; font-weight: 800; margin-top: 6px; letter-spacing: -0.02em; }
+    .stat-card .d { font-size: 11.5px; margin-top: 4px; color: var(--green); font-weight: 600; }
+    .stat-card .d.down { color: var(--red); }
+
+    .empty {
+      padding: 60px 32px;
+      text-align: center;
+      border: 1.5px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--bg-soft);
+    }
+    .empty .ic {
+      width: 56px; height: 56px;
+      margin: 0 auto 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      font-size: 26px;
+    }
+    .empty h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
+    .empty p { margin: 0 0 18px; color: var(--text-muted); font-size: 13.5px; }
+
+    .session-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .session-row:last-child { border-bottom: none; }
+    .session-row .sicon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--gold-soft); color: var(--gold-dark);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .session-row .body { flex: 1; min-width: 0; }
+    .session-row .body .t { font-size: 13.5px; font-weight: 600; }
+    .session-row .body .s { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+    .session-row .pill {
+      padding: 3px 9px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .pill.hot { background: rgba(251, 113, 133, 0.14); color: #BE123C; }
+    .pill.warm { background: rgba(245, 158, 11, 0.14); color: var(--gold-dark); }
+    .pill.cold { background: rgba(96, 165, 250, 0.14); color: var(--blue); }
+
+    /* ─── Settings ────────────────────────────────────────────────── */
+    .row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+      gap: 24px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row .info { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 14px; }
+    .row .info .ic {
+      width: 36px; height: 36px; flex-shrink: 0;
+      border-radius: 10px;
+      background: var(--bg-card);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--text-muted);
+    }
+    .row .info .txt .t { font-size: 14px; font-weight: 600; }
+    .row .info .txt .s { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+    .row .ctrl { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      width: 38px; height: 22px;
+      background: var(--line-strong);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .switch::after {
+      content: '';
+      position: absolute; top: 2px; left: 2px;
+      width: 18px; height: 18px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.20);
+      transition: transform 0.18s ease;
+    }
+    .switch.on { background: var(--gold); }
+    .switch.on::after { transform: translateX(16px); }
+
+    .select {
+      padding: 8px 32px 8px 12px;
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      background: var(--bg);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      min-width: 180px;
+    }
+
+    .key-combo {
+      display: inline-flex; gap: 4px;
+      cursor: pointer;
+    }
+    .key-combo .k {
+      padding: 3px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      font-family: ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 11.5px; font-weight: 600;
+      color: var(--text);
+      min-width: 22px; text-align: center;
+    }
+
+    /* ─── Pricing ──────────────────────────────────────────────────── */
+    .billing-hd {
+      text-align: center;
+      padding: 30px 20px 20px;
+    }
+    .billing-hd h1 {
+      margin: 0 0 14px;
+      font-size: 32px; font-weight: 800; letter-spacing: -0.025em;
+    }
+    .billing-hd .press {
+      display: flex; gap: 28px; justify-content: center; align-items: center;
+      opacity: 0.50; filter: grayscale(1);
+      margin-bottom: 18px;
+    }
+    .billing-toggle {
+      display: inline-flex;
+      padding: 4px;
+      background: var(--bg-card);
+      border-radius: 999px;
+      gap: 4px;
+    }
+    .billing-toggle button {
+      padding: 6px 18px; border: none; background: transparent;
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      border-radius: 999px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+    .billing-toggle button.active {
+      background: var(--bg);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+    .billing-toggle .save-pill {
+      display: inline-block; margin-left: 5px;
+      padding: 1px 7px;
+      background: var(--blue); color: #FFFFFF;
+      border-radius: 999px;
+      font-size: 10px; font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .plans {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      max-width: 720px; margin: 30px auto 24px;
+      padding: 0 24px;
+    }
+    .plan-card {
+      padding: 28px 24px 22px;
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-card.pro {
+      background: linear-gradient(135deg, #FFEDB0 0%, #FFD60A 100%);
+      color: var(--bg-dark);
+    }
+    .plan-card.team {
+      background: linear-gradient(135deg, #1F2937 0%, #0A0A0B 100%);
+      color: #F4F4F5;
+    }
+    .plan-card .name { font-size: 14px; font-weight: 700; opacity: 0.85; }
+    .plan-card .badge {
+      display: inline-block; margin-left: 6px;
+      padding: 2px 8px;
+      background: rgba(255,255,255,0.30); color: inherit;
+      border-radius: 999px;
+      font-size: 10.5px; font-weight: 700;
+    }
+    .plan-card .price-row {
+      display: flex; align-items: baseline; gap: 8px; margin: 8px 0 18px;
+    }
+    .plan-card .price-row .strike { font-size: 18px; opacity: 0.45; text-decoration: line-through; }
+    .plan-card .price-row .amt { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; }
+    .plan-card .price-row .per { font-size: 14px; opacity: 0.65; }
+    .plan-card .feature {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      font-size: 13.5px;
+    }
+    .plan-card .feature .check {
+      width: 20px; height: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.30);
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .plan-card.team .feature .check { background: rgba(255, 214, 10, 0.30); color: var(--gold); }
+    .plan-card .upg {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      background: rgba(255,255,255,0.95);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.12s;
+    }
+    .plan-card.team .upg { background: var(--gold); color: var(--bg-dark); }
+    .plan-card .upg:hover { filter: brightness(0.95); }
+    .plan-card .upg .pct {
+      padding: 2px 7px; background: rgba(0,0,0,0.10); border-radius: 999px;
+      font-size: 10.5px; font-weight: 800;
+    }
+    .free-plan {
+      max-width: 720px; margin: 0 auto;
+      padding: 18px 24px;
+      display: grid; grid-template-columns: 1fr 2fr;
+      gap: 20px; align-items: center;
+    }
+    .free-plan .free-name {
+      font-size: 14px; font-weight: 700; color: var(--text-muted);
+    }
+    .free-plan .free-price {
+      font-size: 30px; font-weight: 800; letter-spacing: -0.02em;
+      margin-top: 2px;
+    }
+    .free-plan .free-feats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
+    }
+    .free-plan .free-feats .ff {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px;
+    }
+    .free-plan .free-feats .ff .c {
+      width: 18px; height: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    .stars-row {
+      text-align: center;
+      padding: 10px 0 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .stars-row .s { color: var(--gold-dark); font-size: 14px; letter-spacing: 1px; margin-right: 6px; }
+
+    /* ─── Release notes ────────────────────────────────────────────── */
+    .release-pad { max-width: 720px; margin: 0 auto; padding: 60px 32px 80px; }
+    .release-pad .ver-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(34, 197, 94, 0.12); color: #15803D;
+      border-radius: 999px;
+      font-size: 12px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .release-pad .ver-date { display: inline-block; margin-left: 8px; color: var(--text-muted); font-size: 13px; }
+    .release-pad h1 { margin: 16px 0 24px; font-size: 38px; font-weight: 800; letter-spacing: -0.025em; }
+    .release-pad p { font-size: 15.5px; color: var(--text); line-height: 1.6; }
+    .release-pad ul { padding-left: 22px; }
+    .release-pad ul li { font-size: 14.5px; line-height: 1.6; margin-bottom: 12px; color: var(--text); }
+    .release-foot { text-align: center; padding: 24px 0; color: var(--text-faint); font-size: 12px; border-top: 1px solid var(--line); }
+
+    /* ─── Toast ────────────────────────────────────────────────────── */
+    .toast-host {
+      position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+      z-index: 100;
+      pointer-events: none;
+    }
+    .toast-msg {
+      padding: 8px 16px;
+      background: var(--bg-dark);
+      color: #F4F4F5;
+      border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: var(--shadow);
+      animation: toast-pop 2.4s ease forwards;
+    }
+    @keyframes toast-pop {
+      0%   { opacity: 0; transform: translateY(-8px); }
+      10%  { opacity: 1; transform: translateY(0); }
+      85%  { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-4px); }
+    }
+
+    /* ─── Skip link ────────────────────────────────────────────────── */
+    .skip-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 18px;
+      color: var(--text-muted);
+      font-size: 13.5px; font-weight: 500;
+      cursor: pointer; user-select: none;
+    }
+    .skip-link:hover { color: var(--text); }
+
+    /* No splash — Welcome shows directly. We previously had a splash
+       overlay but it was getting stuck on some Tauri/WebView2 setups,
+       so we removed it entirely. Welcome page renders instantly. */
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Title bar (drag region) -->
+  <div class="titlebar" id="titlebar">
+    <div class="nav-back" id="nav-back" title="Back">←</div>
+    <div class="nav-fwd" id="nav-fwd" title="Forward">→</div>
+    <div class="search-wrap">
+      <div class="search">
+        <span style="font-size: 13px; color: var(--text-faint);">⌕</span>
+        <input id="searchbar" placeholder="Search or ask anything…" />
+      </div>
+    </div>
+    <div class="right">
+      <div class="avatar" id="avatar" title="Account">B</div>
+      <div class="win-btn" id="win-min" title="Minimize">─</div>
+      <div class="win-btn" id="win-max" title="Maximize">▢</div>
+      <div class="win-btn close" id="win-close" title="Close">×</div>
+    </div>
+  </div>
+
+  <!-- App shell -->
+  <div class="app">
+    <!-- Sidebar (hidden during onboarding) -->
+    <aside class="sidebar hidden" id="sidebar">
+      <div class="sidebar-section">
+        <div class="brand-mark" style="padding: 4px 10px; margin-bottom: 12px;">
+          <div class="logo" style="width:24px; height:24px; font-size:13px;">K</div>
+          <div class="name" style="font-size: 15px;">Klosr</div>
+        </div>
+        <div class="nav-item active" data-route="dashboard"><span class="nav-ico">⊞</span>Dashboard</div>
+        <div class="nav-item" data-route="sessions"><span class="nav-ico">▣</span>Sessions</div>
+        <div class="nav-item" data-route="drafts"><span class="nav-ico">✎</span>Drafts</div>
+        <div class="nav-item" data-route="voice"><span class="nav-ico">♪</span>Voice profile</div>
+        <div class="nav-item" data-route="integrations"><span class="nav-ico">⊕</span>Integrations</div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Settings</div>
+        <div class="nav-item" data-route="general"><span class="nav-ico">⚙</span>General</div>
+        <div class="nav-item" data-route="profile"><span class="nav-ico">◉</span>Profile</div>
+        <div class="nav-item" data-route="keybinds"><span class="nav-ico">⌘</span>Keybinds</div>
+        <div class="nav-item" data-route="security"><span class="nav-ico">🔑</span>Security</div>
+        <div class="nav-item" data-route="language"><span class="nav-ico">A̅</span>Language</div>
+        <div class="nav-item" data-route="billing"><span class="nav-ico">▤</span>Billing</div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Support</div>
+        <div class="nav-item" data-route="release"><span class="nav-ico">▢</span>Release Notes</div>
+        <div class="nav-item" data-route="help"><span class="nav-ico">?</span>Help Center</div>
+        <div class="nav-item" data-route="support"><span class="nav-ico">✉</span>Contact Support</div>
+      </div>
+
+      <div class="sidebar-foot">
+        <div class="nav-item" id="signout-btn"><span class="nav-ico">⇥</span>Sign out</div>
+        <div class="nav-item" id="quit-btn" style="color: var(--red);"><span class="nav-ico">☹</span>Quit Klosr</div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main" id="main">
+
+      <!-- ════ ONBOARDING ════ -->
+
+      <!-- Welcome -->
+      <section class="page active" id="page-welcome">
+        <div class="onb-shell">
+          <div class="col-left">
+            <div class="brand-mark"><div class="logo">K</div><div class="name">Klosr</div></div>
+            <h1>Welcome to Klosr</h1>
+            <div class="lede">The sales co-pilot for B2B founders. Reads your screen with Claude Opus, drafts replies in your voice across LinkedIn, WhatsApp, Gmail, Slack, and Sales Nav.</div>
+            <div class="cta-row">
+              <button class="btn btn-blue" id="welcome-continue" style="padding: 12px 28px; font-size: 14.5px;">
+                Continue <span class="ico">›</span>
+              </button>
+            </div>
+            <div class="legal">
+              By signing up, you agree to our <a href="#" data-ext="https://backend-kappa-nine-57.vercel.app/terms.html">Terms of Service</a> and <a href="#" data-ext="https://backend-kappa-nine-57.vercel.app/privacy.html">Privacy Policy</a>.
+            </div>
+            <div class="press-row">
+              <span class="src bold">PRODUCT&nbsp;HUNT</span>
+              <span class="src">TechCrunch</span>
+              <span class="src">The&nbsp;Information</span>
+              <span class="src bold">SaaStr</span>
+            </div>
+          </div>
+          <div class="col-right">
+            <div class="preview-wrap">
+              <div class="preview-cap">
+                <span class="l">K</span>
+                <span class="pill" style="margin-right: 4px;">● Watching · Opus 4.7</span>
+                <span class="pill primary">▶ Start</span>
+                <span class="pill">≡</span>
+                <span class="pill">×</span>
+              </div>
+              <div class="preview-panel">
+                <div class="q"><span>Draft a reply in my voice</span></div>
+                <div class="src-row"><span class="badge">Watch</span><span>linkedin.com · Maria · CMO at Acme</span></div>
+                <div class="a">"Maria — saw your post on closing inbound deals. We helped <strong>Pau Strathens</strong> turn 18% reply rate into 41% in three weeks. Quick 15-min next Tue?"</div>
+                <div class="actions">
+                  <span class="a-link">📤 WhatsApp</span>
+                  <span class="a-link">📧 Gmail</span>
+                  <span class="a-link">💬 Slack</span>
+                  <span class="a-link">📋 Copy</span>
+                </div>
+                <div class="ask">
+                  <span style="flex: 1;">Ask anything about your screen…</span>
+                  <span class="send">›</span>
+                </div>
+              </div>
+              <div class="preview-tagline">Real-time sales co-pilot, <em>always ready to draft</em>.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Email -->
+      <section class="page" id="page-email">
+        <div class="onb-shell">
+          <div class="col-left" style="max-width: 100%;">
+            <div class="brand-mark"><div class="logo">K</div><div class="name">Klosr</div></div>
+            <div class="verify-card">
+              <h2>What's your email?</h2>
+              <div class="sub">We'll send you a one-time code to verify.</div>
+              <input type="email" id="email-input" placeholder="founder@yourcompany.com"
+                     style="width: 100%; margin: 22px 0 14px; padding: 12px 14px; font-size: 14px; border: 1.5px solid var(--line-strong); border-radius: 10px; outline: none;" />
+              <button class="btn btn-blue" id="email-send" style="width: 100%; padding: 12px;">
+                Send code
+              </button>
+              <div class="skip-link" id="email-skip" style="margin-top: 14px; text-align: center; display: block;">Skip — set up email later ›</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Verify -->
+      <section class="page" id="page-verify">
+        <div class="onb-shell">
+          <div class="col-left" style="max-width: 100%;">
+            <div class="brand-mark"><div class="logo">K</div><div class="name">Klosr</div></div>
+            <div class="verify-card">
+              <h2>Verify your email</h2>
+              <div class="sub">Enter the verification code sent to your email</div>
+              <div class="email" id="verify-email-display">—</div>
+              <div class="code-row" id="code-row">
+                <input maxlength="1" data-i="0" /><input maxlength="1" data-i="1" />
+                <input maxlength="1" data-i="2" /><input maxlength="1" data-i="3" />
+                <input maxlength="1" data-i="4" /><input maxlength="1" data-i="5" />
+              </div>
+              <div class="resend disabled" id="resend-link">Didn't receive a code? Resend (29)</div>
+              <button class="btn btn-blue" id="verify-continue" style="width: 100%; padding: 12px;">
+                Continue ›
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tell us more -->
+      <section class="page" id="page-tellus">
+        <div class="onb-shell">
+          <div class="col-left">
+            <div class="brand-mark"><div class="logo">K</div><div class="name">Klosr</div></div>
+            <h1 style="font-size: 30px;">Tell us more</h1>
+            <div class="form-section">
+              <h3>What do you do?</h3>
+              <div class="chips-row" id="chips-role">
+                <span class="chip" data-val="founder">Founder</span>
+                <span class="chip" data-val="sales">Sales / GTM</span>
+                <span class="chip" data-val="recruiting">Recruiting</span>
+                <span class="chip" data-val="finance">Finance</span>
+                <span class="chip" data-val="consulting">Consulting</span>
+                <span class="chip" data-val="engineering">Engineering</span>
+                <span class="chip" data-val="marketing">Marketing</span>
+                <span class="chip" data-val="management">Management</span>
+                <span class="chip" data-val="legal">Legal</span>
+                <span class="chip" data-val="data">Data / Analytics</span>
+                <span class="chip" data-val="design">Design</span>
+                <span class="chip" data-val="product">Product</span>
+                <span class="chip" data-val="ops">Operations</span>
+                <span class="chip" data-val="other">Other</span>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3>How did you hear about Klosr?</h3>
+              <div class="chips-row" id="chips-source">
+                <span class="chip" data-val="google">Google</span>
+                <span class="chip" data-val="linkedin">LinkedIn</span>
+                <span class="chip" data-val="x">Twitter / X</span>
+                <span class="chip" data-val="youtube">YouTube</span>
+                <span class="chip" data-val="email">Email</span>
+                <span class="chip" data-val="tiktok">TikTok</span>
+                <span class="chip" data-val="instagram">Instagram</span>
+                <span class="chip" data-val="reddit">Reddit</span>
+                <span class="chip" data-val="podcast">Podcast</span>
+                <span class="chip" data-val="referral">Word of mouth</span>
+                <span class="chip" data-val="other">Other</span>
+              </div>
+            </div>
+            <button class="btn btn-blue" id="tellus-continue" style="padding: 12px 28px;">Continue</button>
+          </div>
+          <div class="col-right">
+            <div class="preview-wrap">
+              <div style="background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; max-width: 440px; box-shadow: var(--shadow); position: relative; z-index: 1;">
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Hot reply detected</div>
+                <div style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">Maria · CMO at Acme · LinkedIn DM</div>
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-soft); border-radius: 10px; margin-bottom: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #FBBF24, #F59E0B);"></div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 700;">Maria Lopez</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); height: 8px; background: var(--line); width: 70%; border-radius: 4px;"></div>
+                  </div>
+                  <span style="font-size: 11px; color: var(--text-muted);">in</span>
+                </div>
+                <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px;">Klosr says</div>
+                <div style="background: var(--gold-soft); padding: 10px 12px; border-radius: 10px; border-left: 3px solid var(--gold); font-size: 12.5px; line-height: 1.55;">
+                  Maria — quick context: we helped <strong>Pau Strathens</strong> close their last 4 ICP-fit deals using Klosr. Worth a 15-min on Tuesday?
+                </div>
+              </div>
+              <div class="preview-tagline" style="margin-top: 32px; font-size: 16px;">
+                430,000+ founders already use Klosr.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Which fits -->
+      <section class="page" id="page-fits">
+        <div class="onb-shell">
+          <div class="col-left">
+            <div class="brand-mark"><div class="logo">K</div><div class="name">Klosr</div></div>
+            <h1>Which one fits you best?</h1>
+            <div class="fits-list" style="margin-top: 22px;">
+              <div class="fits-card" data-val="founder-bd">
+                <div class="ico">🚀</div>
+                <div class="body"><div class="t">Founder doing sales</div><div class="s">Cold outbound, inbound replies, demo follow-ups</div></div>
+                <div class="arrow">›</div>
+              </div>
+              <div class="fits-card" data-val="sales">
+                <div class="ico">💼</div>
+                <div class="body"><div class="t">Full-time sales</div><div class="s">SDR / AE / RevOps — full pipeline workflow</div></div>
+                <div class="arrow">›</div>
+              </div>
+              <div class="fits-card" data-val="recruiter">
+                <div class="ico">🎯</div>
+                <div class="body"><div class="t">Recruiter</div><div class="s">Candidate outreach, intro emails, offer follow-ups</div></div>
+                <div class="arrow">›</div>
+              </div>
+              <div class="fits-card" data-val="curious">
+                <div class="ico">✨</div>
+                <div class="body"><div class="t">Curious</div><div class="s">Just exploring how Klosr fits in your workflow</div></div>
+                <div class="arrow">›</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-right">
+            <div class="preview-wrap">
+              <div style="background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; max-width: 460px; box-shadow: var(--shadow); position: relative; z-index: 1;">
+                <div style="font-size: 12px; color: var(--text-muted);">Active deal</div>
+                <div style="font-size: 18px; font-weight: 800; margin: 4px 0 12px;">Acme · Series B Pipeline</div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                  ✦ 3 stakeholders engaged
+                </div>
+                <div style="display: flex; gap: 4px; margin-bottom: 14px;">
+                  <span style="padding: 3px 9px; background: var(--bg-card); border-radius: 999px; font-size: 11px; font-weight: 600;">Maria · CMO</span>
+                  <span style="font-size: 11px; color: var(--text-muted);">Tom · CEO</span>
+                  <span style="font-size: 11px; color: var(--text-muted);">Liam · CFO</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted);">📍 San Francisco · 📈 SaaS</div>
+                <div style="font-size: 13px; line-height: 1.55; margin: 10px 0 14px; color: var(--text);">Acme is in evaluation phase — they shortlisted you and 2 competitors. Last touch was Maria's reply 4d ago.</div>
+                <button class="btn btn-blue" style="width: 100%;">✦ Draft next message</button>
+              </div>
+              <div class="preview-tagline" style="margin-top: 32px;">
+                80% of founders forget to follow up.<br>
+                <em>With Klosr, you never will.</em>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tutorial -->
+      <section class="page" id="page-tutorial">
+        <div class="onb-shell">
+          <div class="col-left">
+            <div class="brand-mark"><div class="logo">K</div><div class="name">Klosr</div></div>
+            <div style="margin-bottom: 18px; color: var(--text-muted); font-size: 13.5px; font-weight: 600;">Try Klosr</div>
+            <h1 style="font-size: 30px;">Click ▶ Start to begin watching</h1>
+            <div class="lede">
+              Klosr captures your screen every few seconds, detects when you're in a sales conversation, and drafts replies in your voice — instantly typed into the right composer.
+            </div>
+            <button class="btn btn-blue pulse" id="tutorial-start" style="padding: 14px 36px; margin-top: 18px;">
+              <span class="ico">▶</span> Click ▶ to continue
+            </button>
+            <div class="skip-link" id="tutorial-skip">Skip ›</div>
+          </div>
+          <div class="col-right">
+            <div class="preview-wrap">
+              <div class="preview-cap">
+                <span class="l">K</span>
+                <span class="pill" style="margin-right: 4px;">● Idle</span>
+                <span class="pulse" style="display: inline-flex;"><span class="pill primary">▶ Start</span></span>
+                <span class="pill">≡</span>
+                <span class="pill">×</span>
+              </div>
+              <div class="preview-tagline" style="margin-top: 60px; font-size: 17px;">
+                The capsule floats — <em>always one click from a draft</em>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ DASHBOARD ════ -->
+      <section class="page" id="page-dashboard">
+        <div class="page-pad">
+          <div class="page-hd">
+            <div>
+              <h1>Good morning, <span id="dash-firstname">Founder</span></h1>
+              <p>Klosr is ready to draft replies in your voice across every app.</p>
+            </div>
+            <div class="right">
+              <button class="btn" id="dash-toggle-watch"><span class="ico">▶</span>Start watching</button>
+              <button class="btn btn-primary" id="dash-open-overlay"><span class="ico">▦</span>Open capsule</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom: 22px;">
+            <div class="stat-card"><div class="t">Drafts today</div><div class="v" id="d-drafts">0</div><div class="d">Reset at midnight</div></div>
+            <div class="stat-card"><div class="t">Sent today</div><div class="v" id="d-sent">0</div><div class="d">Across all channels</div></div>
+            <div class="stat-card"><div class="t">Watch time</div><div class="v" id="d-watch">0m</div><div class="d">Today</div></div>
+            <div class="stat-card"><div class="t">Hot replies</div><div class="v" id="d-hot">0</div><div class="d">High-temp drafts</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-hd">
+              <h3>Recent sessions</h3>
+              <span class="meta">Last 7 days</span>
+            </div>
+            <div id="sessions-recent">
+              <div class="empty">
+                <div class="ic">▣</div>
+                <h3>No sessions yet</h3>
+                <p>Start watching and Klosr will draft replies as you work.</p>
+                <button class="btn btn-primary" id="dash-empty-start">▶ Start your first session</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-hd">
+              <h3>What's new</h3>
+              <span class="meta" id="dash-version">v0.3.0</span>
+            </div>
+            <div style="display: flex; gap: 14px; align-items: flex-start;">
+              <div style="flex-shrink: 0; padding: 4px 10px; background: rgba(34,197,94,0.12); color:#15803D; border-radius: 999px; font-size: 12px; font-weight: 700;">Just shipped</div>
+              <div>
+                <div style="font-size: 14.5px; font-weight: 700; margin-bottom: 4px;">v0.3.0 — Klosr's main app + Cluely-style onboarding</div>
+                <div style="color: var(--text-muted); font-size: 13px;">Brand-new main window with sidebar, billing, sessions history, and full settings nav. The capsule overlay still does the typing.</div>
+                <a class="skip-link" data-route="release" style="margin-top: 8px;">Read release notes ›</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ SESSIONS ════ -->
+      <section class="page" id="page-sessions">
+        <div class="page-pad">
+          <div class="page-hd">
+            <div><h1>Sessions</h1><p>Every Watch session and the drafts it produced.</p></div>
+            <div class="right"><button class="btn btn-primary" data-route="dashboard">▶ Start new session</button></div>
+          </div>
+          <div class="panel">
+            <div class="empty">
+              <div class="ic">▣</div>
+              <h3>Your session history will appear here</h3>
+              <p>Each Watch run with its drafts, sends, and meeting context — searchable.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ DRAFTS ════ -->
+      <section class="page" id="page-drafts">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Drafts</h1><p>All drafts Klosr generated, ready to send or edit.</p></div></div>
+          <div class="panel">
+            <div class="empty">
+              <div class="ic">✎</div>
+              <h3>No drafts yet</h3>
+              <p>Run Watch and drafts will accumulate here.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ VOICE ════ -->
+      <section class="page" id="page-voice">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Voice profile</h1><p>The way Klosr writes for you. Trained from your past replies.</p></div></div>
+          <div class="panel">
+            <div class="row">
+              <div class="info">
+                <div class="ic">♪</div>
+                <div class="txt"><div class="t">Voice clarity</div><div class="s">How distinctive your voice is. More replies = sharper voice.</div></div>
+              </div>
+              <div class="ctrl"><span style="font-weight: 700;" id="voice-clarity">Calibrating</span></div>
+            </div>
+            <div class="row">
+              <div class="info">
+                <div class="ic">📥</div>
+                <div class="txt"><div class="t">Sample replies</div><div class="s">Paste 3–5 of your best DMs/emails to lock in tone.</div></div>
+              </div>
+              <div class="ctrl"><button class="btn">Add samples</button></div>
+            </div>
+            <div class="row">
+              <div class="info">
+                <div class="ic">🎯</div>
+                <div class="txt"><div class="t">ICP / target customer</div><div class="s">Who you're writing to.</div></div>
+              </div>
+              <div class="ctrl"><button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/app.html#voice">Edit on klosr.com</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ INTEGRATIONS ════ -->
+      <section class="page" id="page-integrations">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Integrations</h1><p>Push deals, log activity, and sync replies with your stack.</p></div></div>
+          <div class="panel">
+            <div class="row">
+              <div class="info"><div class="ic" style="background: rgba(255, 122, 0, 0.15); color: #FF7A00;">H</div><div class="txt"><div class="t">HubSpot</div><div class="s">Push deals on every "warm" or "hot" reply.</div></div></div>
+              <div class="ctrl"><span class="pill cold" data-int="hubspot">Not connected</span> <button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/app.html#integrations">Connect</button></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic" style="background: rgba(0, 161, 228, 0.15); color: #00A1E4;">S</div><div class="txt"><div class="t">Salesforce</div><div class="s">Log activity and update opportunities.</div></div></div>
+              <div class="ctrl"><span class="pill cold" data-int="salesforce">Not connected</span> <button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/app.html#integrations">Connect</button></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic" style="background: rgba(0, 200, 83, 0.15); color: #00C853;">P</div><div class="txt"><div class="t">Pipedrive</div><div class="s">Auto-push qualified deals to your pipeline.</div></div></div>
+              <div class="ctrl"><span class="pill cold" data-int="pipedrive">Not connected</span> <button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/app.html#integrations">Connect</button></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic" style="background: rgba(74, 21, 75, 0.15); color: #4A154B;">⌬</div><div class="txt"><div class="t">Slack</div><div class="s">Notify your team when hot replies land.</div></div></div>
+              <div class="ctrl"><span class="pill cold" data-int="slack">Not connected</span> <button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/app.html#integrations">Connect</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ GENERAL ════ -->
+      <section class="page" id="page-general">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>General</h1><p>Customize how Klosr works for you.</p></div></div>
+          <div class="panel">
+            <div class="row">
+              <div class="info"><div class="ic">⬇</div><div class="txt"><div class="t">Klosr Version</div><div class="s">You are currently using Klosr <span id="gen-version">0.3.0</span></div></div></div>
+              <div class="ctrl"><button class="btn" id="check-updates">Check for updates</button></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">👁</div><div class="txt"><div class="t">Detectable</div><div class="s">When off, Klosr is invisible to screen-share. Pro plan only.</div></div></div>
+              <div class="ctrl"><div class="switch" data-set="detectable"></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">🎧</div><div class="txt"><div class="t">Auto-watch on launch</div><div class="s">Start Watch mode automatically when you open Klosr.</div></div></div>
+              <div class="ctrl"><div class="switch" data-set="autostart"></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">🔔</div><div class="txt"><div class="t">OS notifications</div><div class="s">Toast when a hot reply is detected.</div></div></div>
+              <div class="ctrl"><div class="switch on" data-set="notifications"></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">✨</div><div class="txt"><div class="t">Pulse on hot reply</div><div class="s">Animate the capsule when temperature ≥ HOT.</div></div></div>
+              <div class="ctrl"><div class="switch on" data-set="pulse"></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">🎨</div><div class="txt"><div class="t">Color theme</div><div class="s">Use light, dark, or match your system theme.</div></div></div>
+              <div class="ctrl">
+                <select class="select" id="theme-select">
+                  <option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-hd"><h3>Watch sensitivity</h3><span class="meta">Lower = fewer API calls, less responsive</span></div>
+            <input type="range" min="0" max="100" value="50" id="sens-slider" style="width: 100%;" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ PROFILE ════ -->
+      <section class="page" id="page-profile">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Profile</h1><p>Your name and company show up in drafts.</p></div></div>
+          <div class="panel">
+            <div class="row">
+              <div class="info"><div class="ic">◉</div><div class="txt"><div class="t">Your name</div><div class="s">Used in email signatures and intros.</div></div></div>
+              <div class="ctrl"><input class="select" id="profile-name" placeholder="Bosco" style="background-image: none; padding-right: 12px;" /></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">🏢</div><div class="txt"><div class="t">Company</div><div class="s">What Klosr says you sell.</div></div></div>
+              <div class="ctrl"><input class="select" id="profile-company" placeholder="Klosr" style="background-image: none; padding-right: 12px;" /></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">📧</div><div class="txt"><div class="t">Email</div><div class="s">Where billing & support land.</div></div></div>
+              <div class="ctrl"><span class="meta" id="profile-email" style="color: var(--text-muted);">—</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ KEYBINDS ════ -->
+      <section class="page" id="page-keybinds">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Keyboard shortcuts</h1><p>Klosr works with these easy-to-remember commands. Click any keybind to edit.</p></div></div>
+
+          <div class="panel">
+            <h3 style="margin: 0 0 8px; font-size: 14px;">General</h3>
+            <div class="row">
+              <div class="info"><div class="ic">▭</div><div class="txt"><div class="t">Toggle visibility of Klosr</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">\</span></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">💬</div><div class="txt"><div class="t">Ask Klosr about your screen</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">↩</span></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">✎</div><div class="txt"><div class="t">Clear current conversation</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">R</span></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">▶</div><div class="txt"><div class="t">Start or stop a Klosr session</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">Shift</span><span class="k">K</span></div></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin: 0 0 8px; font-size: 14px;">Window</h3>
+            <div class="row">
+              <div class="info"><div class="ic">↑</div><div class="txt"><div class="t">Move window up</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">↑</span></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">↓</div><div class="txt"><div class="t">Move window down</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">↓</span></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">←</div><div class="txt"><div class="t">Move window left</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">←</span></div></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">→</div><div class="txt"><div class="t">Move window right</div></div></div>
+              <div class="ctrl"><div class="key-combo"><span class="k">Ctrl</span><span class="k">→</span></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ SECURITY ════ -->
+      <section class="page" id="page-security">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Security</h1><p>Your data, your control.</p></div></div>
+          <div class="panel">
+            <div class="row">
+              <div class="info"><div class="ic">🛡</div><div class="txt"><div class="t">Local screenshots</div><div class="s">Frames sent to Vision are never stored on disk.</div></div></div>
+              <div class="ctrl"><span style="color: var(--green); font-weight: 700;">✓ Off</span></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">🔒</div><div class="txt"><div class="t">End-to-end TLS</div><div class="s">All Vision API calls travel over TLS 1.3.</div></div></div>
+              <div class="ctrl"><span style="color: var(--green); font-weight: 700;">✓ Always</span></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">🗑</div><div class="txt"><div class="t">Clear local data</div><div class="s">Drafts, stats, settings — all wiped.</div></div></div>
+              <div class="ctrl"><button class="btn btn-danger" id="sec-clear">Clear</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ LANGUAGE ════ -->
+      <section class="page" id="page-language">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Language</h1><p>Select the language you want to use for your screen captures and drafts.</p></div></div>
+          <div class="panel">
+            <div class="row">
+              <div class="info"><div class="ic">A̅</div><div class="txt"><div class="t">Capture language</div><div class="s">Language Klosr expects to read on screen.</div></div></div>
+              <div class="ctrl"><select class="select" id="lang-cap"><option>English (recommended)</option><option>Spanish</option><option>French</option><option>German</option><option>Portuguese</option><option>Italian</option></select></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">✎</div><div class="txt"><div class="t">Output language</div><div class="s">Language Klosr drafts replies in.</div></div></div>
+              <div class="ctrl"><select class="select" id="lang-out"><option>English</option><option>Spanish</option><option>French</option><option>German</option><option>Portuguese</option><option>Italian</option></select></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ BILLING ════ -->
+      <section class="page" id="page-billing">
+        <div class="billing-hd">
+          <h1>Unlock all features with Klosr Pro</h1>
+          <div class="press">
+            <span style="font-family: 'Times New Roman', serif; font-size: 16px; font-style: italic; color: var(--text-muted);">TechCrunch</span>
+            <span style="font-family: 'Times New Roman', serif; font-size: 16px; font-style: italic; color: var(--text-muted);">The&nbsp;Information</span>
+            <span style="font-family: -apple-system, sans-serif; font-weight: 800; font-size: 14px; letter-spacing: -0.02em; color: var(--text-muted);">PRODUCT&nbsp;HUNT</span>
+            <span style="font-family: -apple-system, sans-serif; font-weight: 800; font-size: 14px; letter-spacing: -0.02em; color: var(--text-muted);">SaaStr</span>
+          </div>
+          <div class="billing-toggle">
+            <button id="bill-monthly">Monthly</button>
+            <button class="active" id="bill-annual">Annual <span class="save-pill">Save 45%</span></button>
+          </div>
+        </div>
+
+        <div class="plans">
+          <div class="plan-card pro">
+            <div class="name">Pro plan</div>
+            <div class="price-row"><span class="strike" data-mo="$24.99" data-yr="$24.99">$24.99</span><span class="amt" data-mo="$13.99" data-yr="$13.99">$13.99</span><span class="per">/month</span></div>
+            <div class="feature"><span class="check">∞</span>Unlimited drafts</div>
+            <div class="feature"><span class="check">∞</span>Unlimited Watch sessions</div>
+            <div class="feature"><span class="check">✓</span>Access to Claude Opus 4.7</div>
+            <div class="feature"><span class="check">✓</span>HubSpot, Salesforce, Pipedrive sync</div>
+            <div class="feature"><span class="check">✓</span>Priority chat support</div>
+            <button class="upg" data-plan="pro">Upgrade <span class="pct">-45%</span></button>
+          </div>
+          <div class="plan-card team">
+            <div class="name">Team plan <span class="badge">Popular</span></div>
+            <div class="price-row"><span class="strike" data-mo="$149.99" data-yr="$149.99">$149.99</span><span class="amt" data-mo="$79.99" data-yr="$79.99">$79.99</span><span class="per">/seat / mo</span></div>
+            <div class="feature"><span class="check">✓</span>Everything in Pro</div>
+            <div class="feature"><span class="check">✓</span>Klosr Teams (multi-seat workspace)</div>
+            <div class="feature"><span class="check">✓</span>Shared voice profile + ICP</div>
+            <div class="feature"><span class="check">✓</span>Cluely-style undetectable mode</div>
+            <div class="feature"><span class="check">✓</span>Priority Slack support</div>
+            <button class="upg" data-plan="team">Upgrade <span class="pct">-45%</span></button>
+          </div>
+        </div>
+
+        <div class="stars-row">
+          <span class="s">★ ★ ★ ★ ★</span>Trusted by 430,000+ founders &amp; sellers
+        </div>
+
+        <div class="free-plan">
+          <div>
+            <div class="free-name">Free plan</div>
+            <div class="free-price">$0</div>
+          </div>
+          <div class="free-feats">
+            <div class="ff"><span class="c">✓</span>Limited Watch usage per session</div>
+            <div class="ff"><span class="c">✓</span>Limited free sessions</div>
+            <div class="ff"><span class="c">✓</span>Ask Klosr about past sessions</div>
+            <div class="ff"><span class="c">✓</span>Customize Klosr instructions</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ RELEASE NOTES ════ -->
+      <section class="page" id="page-release">
+        <div class="release-pad">
+          <div>
+            <span class="ver-badge">Release notes for v0.3.0</span>
+            <span class="ver-date">April 26, 2026</span>
+          </div>
+          <h1>Welcome to Klosr 0.3</h1>
+          <p>Klosr 0.3 ships a brand-new <strong>main app window</strong> alongside the floating capsule, Cluely-style onboarding, full settings, billing, and a complete sessions history. Built so founders can manage Klosr like a real product, not just a floating helper.</p>
+
+          <h2 style="font-size: 22px; margin-top: 36px;">A few standout improvements</h2>
+          <ul>
+            <li><strong>Two-window architecture.</strong> The capsule keeps doing the typing; the new main app handles onboarding, billing, integrations, and history.</li>
+            <li><strong>Unicode keystroke injection</strong> (v0.2.1) — auto-paste now works on WhatsApp Desktop, Slack, Discord, Outlook, Teams. SendInput types each character; Electron apps treat it as real keyboard input.</li>
+            <li><strong>Foreground tracking.</strong> Hovering an inject button captures the target HWND; click forces SetForegroundWindow + types. Always lands in the right app.</li>
+            <li><strong>Dashboard with stats</strong> — drafts, sends, watch time, hot replies. Persisted day-by-day in localStorage.</li>
+            <li><strong>Settings sidebar</strong> with General / Profile / Keybinds / Security / Language / Billing.</li>
+            <li><strong>Pricing page</strong> with Pro ($13.99/mo) and Team ($79.99/seat/mo) plans, both deep-linked to Stripe Checkout via the backend.</li>
+          </ul>
+
+          <h2 style="font-size: 22px; margin-top: 36px;">Coming next</h2>
+          <ul>
+            <li>Calendar integration (Google + Outlook) — auto-pull meetings into the Sessions list</li>
+            <li>Macros / Keybinds — set Ctrl+Shift+W for "draft + send to WhatsApp" without leaving the keyboard</li>
+            <li>Klosr Teams workspace — shared proof library, voice profile, ICP across seats</li>
+          </ul>
+
+          <div class="release-foot">© 2026 Klosr · Built by founders, for founders.</div>
+        </div>
+      </section>
+
+      <!-- ════ HELP / SUPPORT ════ -->
+      <section class="page" id="page-help">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Help Center</h1><p>Quick answers and guides.</p></div></div>
+          <div class="panel">
+            <div class="row"><div class="info"><div class="ic">📖</div><div class="txt"><div class="t">Getting started guide</div><div class="s">5-minute walkthrough of Watch mode + injecting drafts.</div></div></div><div class="ctrl"><button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/help.html">Open</button></div></div>
+            <div class="row"><div class="info"><div class="ic">💡</div><div class="txt"><div class="t">Voice training tips</div><div class="s">How to train Klosr to write exactly like you.</div></div></div><div class="ctrl"><button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/help.html#voice">Open</button></div></div>
+            <div class="row"><div class="info"><div class="ic">🔌</div><div class="txt"><div class="t">CRM integration setup</div><div class="s">HubSpot, Salesforce, Pipedrive walkthrough.</div></div></div><div class="ctrl"><button class="btn" data-ext="https://backend-kappa-nine-57.vercel.app/help.html#crm">Open</button></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-support">
+        <div class="page-pad">
+          <div class="page-hd"><div><h1>Contact support</h1><p>We're founders too. Real humans answer in &lt; 4 hours.</p></div></div>
+          <div class="panel">
+            <div class="row">
+              <div class="info"><div class="ic">✉</div><div class="txt"><div class="t">Email</div><div class="s">hello@klosr.com</div></div></div>
+              <div class="ctrl"><button class="btn btn-primary" data-ext="mailto:hello@klosr.com">Send email</button></div>
+            </div>
+            <div class="row">
+              <div class="info"><div class="ic">⌬</div><div class="txt"><div class="t">Slack community</div><div class="s">Live help from other Klosr founders.</div></div></div>
+              <div class="ctrl"><button class="btn" data-ext="https://klosr.com/slack">Join</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="toast-host" id="toast-host"></div>
+  <!-- v0.3.3 — main.js inlined directly so there's NO external file to fail loading.
+       Tauri's asset resolver was apparently not serving main.js for the new "main"
+       window in production builds, breaking every event handler. Inlining bypasses
+       that entirely — JS is part of the same HTML document. -->
+  <script>
+  (function() {
+  const INTEL_URL = "https://backend-kappa-nine-57.vercel.app/api/intel";
+  const IID_KEY     = "klosr_pwa_install_id";
+  const USER_KEY    = "klosr_pwa_user";
+  const ONB_KEY     = "klosr_onboarded_v1";
+  const SETTINGS_KEY = "klosr_settings_v1";
+  const STATS_KEY    = "klosr_stats_v1";
+  const KLOSR_VERSION = "0.3.5";
+
+  let _user = null;
+  let _onb = { role: null, source: null, fits: null, email: null };
+  const defaultSettings = {
+    detectable: true, autostart: false, notifications: true, pulse: true,
+    sensitivity: 50, theme: "system",
+  };
+  let _settings = Object.assign({}, defaultSettings);
+  const navHistory = ["welcome"];
+  let navIndex = 0;
+  let billingMode = "annual";
+
+  const isTauri = function() { return !!window.__TAURI__; };
+  const $ = function(id) { return document.getElementById(id); };
+  const $$ = function(sel) { return document.querySelectorAll(sel); };
+
+  function loadSettings() {
+    try { _settings = Object.assign({}, defaultSettings, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}")); } catch (e) {}
+  }
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(_settings)); } catch (e) {}
+  }
+
+  function todayStats() {
+    try {
+      var d = new Date();
+      var k = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+      var all = JSON.parse(localStorage.getItem(STATS_KEY) || "{}");
+      return all[k] || { drafts: 0, sent: 0, watchSec: 0, hot: 0 };
+    } catch (e) { return { drafts: 0, sent: 0, watchSec: 0, hot: 0 }; }
+  }
+
+  async function callIntel(action, params) {
+    try {
+      var res = await fetch(INTEL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: action, params: params || {} }),
+      });
+      return await res.json();
+    } catch (e) { return { ok: false, error: String(e) }; }
+  }
+
+  function showToast(msg) {
+    var host = $("toast-host");
+    if (!host) return;
+    var el = document.createElement("div");
+    el.className = "toast-msg";
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(function() { el.remove(); }, 2400);
+  }
+
+  function openExternal(url) {
+    if (window.__TAURI__ && window.__TAURI__.shell && window.__TAURI__.shell.open) {
+      window.__TAURI__.shell.open(url).catch(function() { try { window.open(url); } catch (e) {} });
+    } else {
+      try { window.open(url, "_blank"); } catch (e) {}
+    }
+  }
+
+  function showPage(id, opts) {
+    opts = opts || {};
+    var pages = $$(".page");
+    pages.forEach(function(p) { p.classList.remove("active"); });
+    var target = $("page-" + id);
+    if (target) target.classList.add("active");
+
+    var sidebar = $("sidebar");
+    var onboardingPages = ["welcome", "email", "verify", "tellus", "fits", "tutorial"];
+    if (sidebar) sidebar.classList.toggle("hidden", onboardingPages.indexOf(id) >= 0);
+
+    $$(".nav-item").forEach(function(n) {
+      n.classList.toggle("active", n.dataset.route === id);
+    });
+
+    if (!opts.noPush) {
+      navHistory.length = navIndex + 1;
+      navHistory.push(id);
+      navIndex = navHistory.length - 1;
+    }
+
+    if (id === "dashboard") refreshDashboard();
+    if (id === "general")   refreshSettingsPanel();
+    if (id === "profile")   refreshProfile();
+    if (id === "billing")   refreshBilling();
+    if (id === "integrations") refreshIntegrations();
+
+    var main = $("main");
+    if (main && main.scrollTo) main.scrollTo({ top: 0 });
+  }
+
+  function navBack() { if (navIndex > 0) { navIndex--; showPage(navHistory[navIndex], { noPush: true }); } }
+  function navFwd()  { if (navIndex < navHistory.length - 1) { navIndex++; showPage(navHistory[navIndex], { noPush: true }); } }
+
+  function wireOnboarding() {
+    var welcomeBtn = $("welcome-continue");
+    if (welcomeBtn) welcomeBtn.addEventListener("click", function() { showPage("email"); });
+
+    var emailSendBtn = $("email-send");
+    if (emailSendBtn) emailSendBtn.addEventListener("click", async function() {
+      var emailInput = $("email-input");
+      var email = (emailInput && emailInput.value || "").trim();
+      if (!email || email.indexOf("@") < 0) { if (emailInput) emailInput.focus(); return; }
+      _onb.email = email;
+      var disp = $("verify-email-display");
+      if (disp) disp.textContent = email;
+      emailSendBtn.disabled = true; emailSendBtn.textContent = "Sending…";
+      var res = await callIntel("auth-code-send", { email: email });
+      emailSendBtn.disabled = false; emailSendBtn.textContent = "Send code";
+      if (res && res.ok) {
+        showPage("verify");
+        startResendCountdown();
+        // Dev mode: server returned the code directly because Resend isn't
+        // configured. Auto-fill it so the user can hit Continue immediately.
+        if (res.devMode && res.devCode) {
+          showToast("Dev mode: code auto-filled");
+          setTimeout(function() {
+            var inputs = $$("#code-row input");
+            String(res.devCode).split("").forEach(function(c, i) {
+              if (inputs[i]) inputs[i].value = c;
+            });
+            // Show a persistent banner above the code inputs
+            var card = document.querySelector("#page-verify .verify-card");
+            if (card && !document.getElementById("dev-code-banner")) {
+              var banner = document.createElement("div");
+              banner.id = "dev-code-banner";
+              banner.style.cssText = "margin: 0 0 16px; padding: 10px 14px; background: rgba(34,197,94,0.10); border: 1px solid rgba(34,197,94,0.35); border-radius: 10px; font-size: 12px; color: #15803D; text-align: left;";
+              banner.innerHTML = "<strong>Dev mode active</strong> — Resend isn't configured on the backend, so we returned the code <strong>" + res.devCode + "</strong> directly. Click Continue to proceed.";
+              card.insertBefore(banner, card.querySelector(".code-row"));
+            }
+          }, 120);
+        } else {
+          showToast("Code sent — check your inbox");
+          setTimeout(function() {
+            var first = $$("#code-row input")[0];
+            if (first) first.focus();
+          }, 100);
+        }
+      } else {
+        var msg = "Couldn't send — try again";
+        if (res && res.reason === "invalid_email") msg = "That email looks invalid";
+        else if (res && res.reason === "email_send_failed") msg = "Couldn't deliver email";
+        else if (res && res.reason === "upstash_not_configured") msg = "Database not configured on server";
+        showToast(msg);
+      }
+    });
+    var emailInput = $("email-input");
+    if (emailInput) emailInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") { var b = $("email-send"); if (b) b.click(); }
+    });
+
+    // Skip email — create a local-only install ID so the user can use Klosr
+    // immediately without configuring Resend. They can verify their email
+    // later in Settings → Profile.
+    var emailSkip = $("email-skip");
+    if (emailSkip) emailSkip.addEventListener("click", function() {
+      var localIid = "kl_local_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      try { localStorage.setItem(IID_KEY, localIid); } catch (e) {}
+      _user = { email: "", installId: localIid, plan: "trial", local: true };
+      try { localStorage.setItem(USER_KEY, JSON.stringify(_user)); } catch (e) {}
+      showToast("Skipped — set up email later");
+      showPage("tellus");
+    });
+
+    var codeInputs = $$("#code-row input");
+    codeInputs.forEach(function(inp, i) {
+      inp.addEventListener("input", function(e) {
+        var v = e.target.value.replace(/[^0-9]/g, "");
+        e.target.value = v.slice(-1);
+        if (v && i < codeInputs.length - 1) codeInputs[i+1].focus();
+      });
+      inp.addEventListener("keydown", function(e) {
+        if (e.key === "Backspace" && !inp.value && i > 0) codeInputs[i-1].focus();
+      });
+      inp.addEventListener("paste", function(e) {
+        e.preventDefault();
+        var text = ((e.clipboardData && e.clipboardData.getData("text")) || "").replace(/[^0-9]/g, "");
+        text.split("").slice(0, 6).forEach(function(c, j) { if (codeInputs[j]) codeInputs[j].value = c; });
+        var idx = Math.min(text.length, 5);
+        if (codeInputs[idx]) codeInputs[idx].focus();
+      });
+    });
+
+    var verifyBtn = $("verify-continue");
+    if (verifyBtn) verifyBtn.addEventListener("click", async function() {
+      var code = Array.prototype.map.call(codeInputs, function(i) { return i.value; }).join("");
+      if (code.length !== 6) { codeInputs[0].focus(); return; }
+      verifyBtn.disabled = true; verifyBtn.textContent = "Verifying…";
+      var res = await callIntel("auth-code-verify", { email: _onb.email, code: code });
+      verifyBtn.disabled = false; verifyBtn.textContent = "Continue ›";
+      if (res && res.ok && res.installId) {
+        localStorage.setItem(IID_KEY, res.installId);
+        _user = res.user || { email: _onb.email };
+        try { localStorage.setItem(USER_KEY, JSON.stringify(_user)); } catch (e) {}
+        showPage("tellus");
+      } else {
+        var msg = "Invalid code — try again";
+        if (res && res.reason === "too_many_attempts") msg = "Too many attempts — request a new code";
+        else if (res && res.reason === "code_invalid_or_expired") msg = "Code expired — request a new one";
+        showToast(msg);
+        codeInputs.forEach(function(i) { i.value = ""; });
+        codeInputs[0].focus();
+      }
+    });
+
+    $$("#chips-role .chip").forEach(function(c) {
+      c.addEventListener("click", function() {
+        $$("#chips-role .chip").forEach(function(x) { x.classList.remove("active"); });
+        c.classList.add("active");
+        _onb.role = c.dataset.val;
+      });
+    });
+    $$("#chips-source .chip").forEach(function(c) {
+      c.addEventListener("click", function() {
+        $$("#chips-source .chip").forEach(function(x) { x.classList.remove("active"); });
+        c.classList.add("active");
+        _onb.source = c.dataset.val;
+      });
+    });
+    var tellusBtn = $("tellus-continue");
+    if (tellusBtn) tellusBtn.addEventListener("click", function() {
+      callIntel("log-event", { event: "onboarding_role", role: _onb.role, source: _onb.source }).catch(function() {});
+      showPage("fits");
+    });
+
+    $$(".fits-card").forEach(function(c) {
+      c.addEventListener("click", function() {
+        $$(".fits-card").forEach(function(x) { x.classList.remove("active"); });
+        c.classList.add("active");
+        _onb.fits = c.dataset.val;
+        setTimeout(function() { showPage("tutorial"); }, 280);
+      });
+    });
+
+    var tutBtn = $("tutorial-start");
+    if (tutBtn) tutBtn.addEventListener("click", finishOnboarding);
+    var tutSkip = $("tutorial-skip");
+    if (tutSkip) tutSkip.addEventListener("click", finishOnboarding);
+  }
+
+  async function finishOnboarding() {
+    localStorage.setItem(ONB_KEY, "1");
+    callIntel("log-event", { event: "onboarding_complete", fits: _onb.fits }).catch(function() {});
+    if (isTauri()) {
+      try { await window.__TAURI__.core.invoke("show_overlay"); } catch (e) {}
+    }
+    showPage("dashboard");
+  }
+
+  function startResendCountdown() {
+    var link = $("resend-link");
+    if (!link) return;
+    var secs = 30;
+    link.classList.add("disabled");
+    function tick() {
+      secs -= 1;
+      if (secs > 0) {
+        link.textContent = "Didn't receive a code? Resend (" + secs + ")";
+        setTimeout(tick, 1000);
+      } else {
+        link.textContent = "Didn't receive a code? Resend";
+        link.classList.remove("disabled");
+        link.onclick = async function() {
+          if (link.classList.contains("disabled")) return;
+          if (!_onb.email) return;
+          link.classList.add("disabled");
+          await callIntel("auth-code-send", { email: _onb.email });
+          showToast("Code resent");
+          startResendCountdown();
+        };
+      }
+    }
+    setTimeout(tick, 1000);
+  }
+
+  function refreshDashboard() {
+    var stats = todayStats();
+    var elDr = $("d-drafts"); if (elDr) elDr.textContent = stats.drafts;
+    var elSn = $("d-sent"); if (elSn) elSn.textContent = stats.sent;
+    var m = Math.floor((stats.watchSec || 0) / 60);
+    var elW = $("d-watch"); if (elW) elW.textContent = m >= 60 ? (m/60).toFixed(1) + "h" : m + "m";
+    var elH = $("d-hot"); if (elH) elH.textContent = stats.hot || 0;
+    var elV = $("dash-version"); if (elV) elV.textContent = "v" + KLOSR_VERSION;
+    if (_user && (_user.yourName || _user.firstName)) {
+      var elFn = $("dash-firstname");
+      if (elFn) elFn.textContent = (_user.yourName || _user.firstName || "Founder").split(" ")[0];
+    }
+  }
+
+  function wireDashboard() {
+    var t = $("dash-toggle-watch");
+    if (t) t.addEventListener("click", async function() {
+      if (isTauri()) {
+        try { await window.__TAURI__.core.invoke("show_overlay"); } catch (e) {}
+        try { await window.__TAURI__.core.invoke("toggle_watch_from_main"); } catch (e) {}
+        showToast("Switched to capsule — watching now");
+      } else { showToast("Open Klosr Desktop to start watching"); }
+    });
+    var o = $("dash-open-overlay");
+    if (o) o.addEventListener("click", async function() {
+      if (isTauri()) { try { await window.__TAURI__.core.invoke("show_overlay"); } catch (e) {} }
+    });
+    var e = $("dash-empty-start");
+    if (e) e.addEventListener("click", function() { var x = $("dash-toggle-watch"); if (x) x.click(); });
+  }
+
+  function refreshSettingsPanel() {
+    var v = $("gen-version"); if (v) v.textContent = KLOSR_VERSION;
+    $$("[data-set]").forEach(function(sw) {
+      sw.classList.toggle("on", !!_settings[sw.dataset.set]);
+    });
+    var ts = $("theme-select"); if (ts) ts.value = _settings.theme;
+    var ss = $("sens-slider"); if (ss) ss.value = _settings.sensitivity;
+  }
+  function wireSettings() {
+    $$("[data-set]").forEach(function(sw) {
+      sw.addEventListener("click", function() {
+        var k = sw.dataset.set;
+        _settings[k] = !_settings[k];
+        sw.classList.toggle("on", _settings[k]);
+        saveSettings();
+      });
+    });
+    var ts = $("theme-select");
+    if (ts) ts.addEventListener("change", function(e) { _settings.theme = e.target.value; saveSettings(); });
+    var ss = $("sens-slider");
+    if (ss) ss.addEventListener("input", function(e) { _settings.sensitivity = Number(e.target.value); saveSettings(); });
+    var cu = $("check-updates");
+    if (cu) cu.addEventListener("click", async function() {
+      cu.disabled = true; cu.textContent = "Checking…";
+      try {
+        var res = await fetch("https://backend-kappa-nine-57.vercel.app/api/updater/windows-x86_64/" + KLOSR_VERSION);
+        if (!res || res.status === 204) showToast("Up to date");
+        else if (res.ok) {
+          var j = await res.json().catch(function() { return null; });
+          showToast(j && j.version ? "Update available: " + j.version : "Update available");
+        } else { showToast("Couldn't check"); }
+      } catch (e) { showToast("Couldn't check"); }
+      cu.textContent = "Check for updates"; cu.disabled = false;
+    });
+    var sc = $("sec-clear");
+    if (sc) sc.addEventListener("click", function() {
+      if (!confirm("Clear all locally cached drafts, stats, and settings?")) return;
+      localStorage.removeItem(STATS_KEY);
+      localStorage.removeItem(SETTINGS_KEY);
+      _settings = Object.assign({}, defaultSettings);
+      refreshSettingsPanel();
+      showToast("Local data cleared");
+    });
+  }
+
+  function refreshProfile() {
+    var n = $("profile-name"); if (n) n.value = (_user && _user.yourName) || "";
+    var c = $("profile-company"); if (c) c.value = (_user && _user.companyName) || "";
+    var e = $("profile-email"); if (e) e.textContent = (_user && _user.email) || _onb.email || "—";
+    var initial = (((_user && (_user.yourName || _user.email)) || "K") + "").charAt(0).toUpperCase();
+    var av = $("avatar"); if (av) av.textContent = initial;
+  }
+  function wireProfile() {
+    ["profile-name", "profile-company"].forEach(function(id) {
+      var el = $(id);
+      if (el) el.addEventListener("change", function() {
+        _user = _user || {};
+        _user.yourName = $("profile-name").value;
+        _user.companyName = $("profile-company").value;
+        try { localStorage.setItem(USER_KEY, JSON.stringify(_user)); } catch (e) {}
+        var iid = localStorage.getItem(IID_KEY);
+        if (iid) callIntel("log-event", { event: "profile_update", installId: iid, yourName: _user.yourName, companyName: _user.companyName }).catch(function() {});
+      });
+    });
+  }
+
+  function refreshBilling() {
+    var monthly = $("bill-monthly"), annual = $("bill-annual");
+    if (!monthly || !annual) return;
+    $$(".plan-card .strike, .plan-card .amt").forEach(function(el) {
+      var v = billingMode === "monthly" ? el.dataset.mo : el.dataset.yr;
+      if (v) el.textContent = v;
+    });
+    $$(".plan-card .pct").forEach(function(el) {
+      el.textContent = billingMode === "monthly" ? "" : "-45%";
+      el.style.display = billingMode === "monthly" ? "none" : "";
+    });
+  }
+  function wireBilling() {
+    var m = $("bill-monthly");
+    if (m) m.addEventListener("click", function() {
+      billingMode = "monthly";
+      m.classList.add("active");
+      var a = $("bill-annual"); if (a) a.classList.remove("active");
+      refreshBilling();
+    });
+    var a = $("bill-annual");
+    if (a) a.addEventListener("click", function() {
+      billingMode = "annual";
+      a.classList.add("active");
+      var m2 = $("bill-monthly"); if (m2) m2.classList.remove("active");
+      refreshBilling();
+    });
+    $$(".plan-card .upg").forEach(function(b) {
+      b.addEventListener("click", async function() {
+        var plan = b.dataset.plan;
+        var iid = localStorage.getItem(IID_KEY) || "";
+        var res = await callIntel("stripe-create-checkout", { plan: plan, period: billingMode, installId: iid });
+        if (res && res.url) openExternal(res.url);
+        else showToast("Couldn't open checkout");
+      });
+    });
+  }
+
+  async function refreshIntegrations() {
+    var iid = localStorage.getItem(IID_KEY);
+    if (!iid) return;
+    var res = await callIntel("sync-state", { installId: iid });
+    if (!res || !res.ok) return;
+    var integ = (res.syncedState && res.syncedState.integrations) || {};
+    ["hubspot", "salesforce", "pipedrive", "slack"].forEach(function(k) {
+      var el = document.querySelector('.pill[data-int="' + k + '"]');
+      if (!el) return;
+      var ok = !!(integ[k] && integ[k].connected);
+      el.textContent = ok ? "Connected" : "Not connected";
+      el.classList.toggle("hot", false);
+      el.classList.toggle("warm", ok);
+      el.classList.toggle("cold", !ok);
+    });
+  }
+
+  function wireShell() {
+    $$(".nav-item[data-route]").forEach(function(n) {
+      n.addEventListener("click", function() { showPage(n.dataset.route); });
+    });
+    $$("[data-route]").forEach(function(n) {
+      if (!n.classList.contains("nav-item")) {
+        n.addEventListener("click", function() { showPage(n.dataset.route); });
+      }
+    });
+    $$("[data-ext]").forEach(function(n) {
+      n.addEventListener("click", function(e) { e.preventDefault(); openExternal(n.dataset.ext); });
+    });
+
+    var nb = $("nav-back"); if (nb) nb.addEventListener("click", navBack);
+    var nf = $("nav-fwd"); if (nf) nf.addEventListener("click", navFwd);
+
+    if (isTauri()) {
+      var win = window.__TAURI__.window && window.__TAURI__.window.getCurrentWindow && window.__TAURI__.window.getCurrentWindow();
+      var wmin = $("win-min"); if (wmin) wmin.addEventListener("click", function() { if (win && win.minimize) win.minimize(); });
+      var wmax = $("win-max"); if (wmax) wmax.addEventListener("click", async function() {
+        if (!win) return;
+        var max = await (win.isMaximized && win.isMaximized());
+        if (max) { if (win.unmaximize) win.unmaximize(); } else { if (win.maximize) win.maximize(); }
+      });
+      var wcl = $("win-close"); if (wcl) wcl.addEventListener("click", function() { if (win && win.close) win.close(); });
+    }
+
+    var so = $("signout-btn");
+    if (so) so.addEventListener("click", function() {
+      if (!confirm("Sign out of Klosr?")) return;
+      localStorage.removeItem(IID_KEY);
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(ONB_KEY);
+      location.reload();
+    });
+    var qb = $("quit-btn");
+    if (qb) qb.addEventListener("click", async function() {
+      if (isTauri()) {
+        try { if (window.__TAURI__.process && window.__TAURI__.process.exit) await window.__TAURI__.process.exit(0); } catch (e) {}
+      }
+    });
+
+    var av = $("avatar"); if (av) av.addEventListener("click", function() { showPage("profile"); });
+
+    var sb = $("searchbar");
+    if (sb) sb.addEventListener("keydown", function(e) {
+      if (e.key !== "Enter") return;
+      var q = e.target.value.trim().toLowerCase();
+      if (!q) return;
+      var map = {
+        "settings": "general", "general": "general",
+        "billing": "billing", "pricing": "billing", "upgrade": "billing",
+        "drafts": "drafts", "sessions": "sessions", "voice": "voice",
+        "integrations": "integrations", "crm": "integrations",
+        "profile": "profile", "account": "profile",
+        "keybinds": "keybinds", "shortcuts": "keybinds",
+        "language": "language", "release": "release", "release notes": "release",
+        "help": "help", "support": "support", "contact": "support",
+        "dashboard": "dashboard", "home": "dashboard",
+      };
+      var route = map[q];
+      if (route) { showPage(route); e.target.value = ""; }
+      else showToast('No page for "' + q + '"');
+    });
+  }
+
+  // ─── Boot ─────────────────────────────────────────────────
+  function safe(fn, label) { try { fn(); } catch (e) { console.error("[klosr] " + label + " failed:", e); } }
+
+  console.log("[klosr] inline boot v" + KLOSR_VERSION);
+  // Cleanup any old splash element from cached HTML
+  try { var s = $("splash"); if (s) s.remove(); } catch (e) {}
+
+  safe(loadSettings, "loadSettings");
+  safe(wireShell, "wireShell");
+  safe(wireOnboarding, "wireOnboarding");
+  safe(wireDashboard, "wireDashboard");
+  safe(wireSettings, "wireSettings");
+  safe(wireProfile, "wireProfile");
+  safe(wireBilling, "wireBilling");
+
+  try { _user = JSON.parse(localStorage.getItem(USER_KEY) || "null"); } catch (e) {}
+  var onboarded = localStorage.getItem(ONB_KEY) === "1";
+  var iid = localStorage.getItem(IID_KEY);
+
+  try {
+    if (onboarded && iid) {
+      showPage("dashboard");
+      callIntel("pwa-bootstrap", { installId: iid }).then(function(res) {
+        if (res && res.ok) {
+          _user = Object.assign({}, res.user, { syncedState: res.syncedState || null });
+          try { localStorage.setItem(USER_KEY, JSON.stringify(_user)); } catch (e) {}
+          safe(refreshDashboard, "refreshDashboard");
+          safe(refreshProfile, "refreshProfile");
+        }
+      }).catch(function(err) { console.warn("[klosr] pwa-bootstrap failed", err); });
+    } else {
+      showPage("welcome");
+    }
+  } catch (e) {
+    console.error("[klosr] boot routing failed:", e);
+    try { showPage("welcome"); } catch (e2) {}
+  }
+
+  console.log("[klosr] inline boot complete");
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Klosr · Verifying sign-in</title>
+  <link rel="icon" type="image/png" href="/icons/icon128.png">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <header class="site-nav">
+    <a href="/" class="brand"><span class="brand-badge">K</span><span class="brand-name">Klosr</span></a>
+    <nav>
+      <a href="/app.html" class="cta-mini">Klosr Desktop →</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="content" style="max-width: 480px; margin: 100px auto 60px; padding: 40px 30px; text-align: center; background: linear-gradient(160deg, #18181B, #27272A); border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 16px;">
+      <div style="width: 36px; height: 36px; border: 3px solid rgba(255, 214, 10, 0.20); border-top-color: #FFD60A; border-radius: 50%; animation: spin 0.9s linear infinite; margin: 14px auto;"></div>
+      <h1 style="font-size: 22px; margin: 0 0 8px;">Verifying your sign-in…</h1>
+      <p style="font-size: 14px; color: rgba(244,244,245,0.72);">One moment.</p>
+    </div>
+  </main>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <script>
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const token = params.get("token");
+      const content = document.getElementById("content");
+
+      if (!token) {
+        content.innerHTML = '<h1 style="color:#F87171">Invalid link</h1><p>Missing token. <a href="/install" style="color:#FFD60A">Try again</a>.</p>';
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/intel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "auth-magic-link-verify", params: { token } })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          // Store the bound install ID + email locally so the PWA picks it up
+          localStorage.setItem("klosr_pwa_install_id", data.installId);
+          localStorage.setItem("klosr_email", data.email);
+          content.innerHTML = `
+            <div style="font-size: 48px; margin-bottom: 16px;">✓</div>
+            <h1 style="font-size: 24px; margin: 0 0 10px; color: #34D399;">Signed in</h1>
+            <p style="font-size: 14px; color: rgba(244,244,245,0.78); margin: 0 0 22px;">${data.email}</p>
+            <a href="/app.html" class="btn-primary" style="display: inline-block;">Open Klosr Desktop →</a>
+          `;
+          setTimeout(() => { location.href = "/app.html"; }, 2200);
+        } else {
+          content.innerHTML = `
+            <div style="font-size: 36px; margin-bottom: 12px;">⚠</div>
+            <h1 style="color: #F87171; font-size: 20px; margin: 0 0 8px;">Link invalid or expired</h1>
+            <p style="font-size: 13px; color: rgba(244,244,245,0.72); margin: 0 0 22px;">Magic links expire after 15 minutes.</p>
+            <a href="/install" class="btn-primary" style="display: inline-block;">Request a new link →</a>
+          `;
+        }
+      } catch (e) {
+        content.innerHTML = `<h1 style="color:#F87171">Network error</h1><p>${e.message || "unknown"}. <a href="/install" style="color:#FFD60A">Try again</a>.</p>`;
+      }
+    })();
+  </script>
+</body>
+</html>

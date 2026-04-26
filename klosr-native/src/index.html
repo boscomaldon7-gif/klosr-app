@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Klosr</title>
+  <link rel="icon" type="image/png" href="./icons/icon128.png">
+  <style>
+    /* ────────────────────────────────────────────────────────────
+       KLOSR NATIVE — Cluely-style floating overlay
+       Frameless · transparent body · always on top · non-activating
+       ──────────────────────────────────────────────────────────── */
+
+    * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+
+    html, body {
+      margin: 0; padding: 0;
+      background: transparent;        /* tauri.conf transparent: true makes this see-through */
+      color: #F4F4F5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, sans-serif;
+      font-size: 13px;
+      overflow: hidden;
+    }
+    body { padding: 12px 14px; }
+
+    /* CAPSULE BAR — always visible, draggable */
+    .capsule {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px 6px 12px;
+      width: fit-content;
+      max-width: 100%;
+      background: rgba(15, 15, 18, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 214, 10, 0.08) inset;
+      -webkit-app-region: drag;
+    }
+    .cap-brand {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 4px 6px;
+      font-weight: 800; font-size: 12px;
+      color: #FFD60A; letter-spacing: -0.01em;
+      pointer-events: none;
+    }
+    .cap-brand .logo {
+      width: 18px; height: 18px;
+      background: linear-gradient(135deg, #FFD60A, #F59E0B);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      color: #0A0A0B; font-weight: 900; font-size: 11px;
+    }
+    .cap-status {
+      font-size: 11px; color: rgba(244, 244, 245, 0.78);
+      padding-right: 8px; white-space: nowrap; max-width: 200px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .cap-status .dot {
+      display: inline-block; width: 6px; height: 6px;
+      border-radius: 50%; background: rgba(244, 244, 245, 0.40);
+      margin-right: 6px; vertical-align: middle;
+    }
+    .cap-status.watching .dot {
+      background: #FB7185;
+      box-shadow: 0 0 6px rgba(251, 113, 133, 0.85);
+      animation: dot-pulse 1.3s ease-in-out infinite;
+    }
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50%      { opacity: 1;   transform: scale(1.15); }
+    }
+    .cap-btn {
+      -webkit-app-region: no-drag;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 10px;
+      font-family: inherit; font-size: 11px; font-weight: 600;
+      color: rgba(244, 244, 245, 0.85);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .cap-btn:hover {
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #F4F4F5;
+    }
+    .cap-btn.primary {
+      background: rgba(255, 214, 10, 0.18);
+      border-color: rgba(255, 214, 10, 0.45);
+      color: #FFD60A;
+    }
+    .cap-btn.primary:hover {
+      background: rgba(255, 214, 10, 0.30);
+      border-color: rgba(255, 214, 10, 0.70);
+    }
+    .cap-btn.danger {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.40);
+      color: #FCA5A5;
+    }
+    .cap-btn .ico {
+      width: 14px; height: 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+
+    /* EXPANDED PANEL */
+    .panel {
+      margin-top: 8px;
+      padding: 14px 14px 12px;
+      background: rgba(15, 15, 18, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.55);
+      animation: panel-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes panel-in {
+      from { transform: translateY(-6px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .panel.hidden { display: none; }
+
+    .panel-question {
+      display: flex; justify-content: flex-end; margin-bottom: 10px;
+    }
+    .panel-question span {
+      padding: 7px 14px;
+      background: linear-gradient(135deg, #1D4ED8, #2563EB);
+      color: #F4F4F5; font-size: 12px; font-weight: 600;
+      border-radius: 16px 16px 4px 16px;
+      max-width: 80%;
+    }
+    .panel-answer {
+      font-size: 13px; line-height: 1.55; color: #F4F4F5;
+      margin-bottom: 12px;
+      max-height: 220px; overflow-y: auto;
+      -webkit-user-select: text; user-select: text;
+    }
+    .panel-answer-quote { font-style: italic; }
+    .panel-source {
+      font-size: 10.5px; color: rgba(244, 244, 245, 0.50);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .panel-source .badge {
+      padding: 2px 7px; border-radius: 4px;
+      background: rgba(255, 214, 10, 0.10); color: #FFD60A;
+      font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+      font-size: 9.5px;
+    }
+    .panel-actions {
+      display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .panel-actions .cap-btn { font-size: 11.5px; padding: 6px 11px; }
+
+    /* Ask-anything composer */
+    .ask-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px 6px 14px;
+      background: rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      transition: border-color 0.15s;
+    }
+    .ask-bar:focus-within { border-color: rgba(255, 214, 10, 0.50); }
+    .ask-bar input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #F4F4F5; font-family: inherit; font-size: 12.5px;
+      padding: 4px 0;
+      -webkit-user-select: text; user-select: text;
+    }
+    .ask-bar input::placeholder { color: rgba(244, 244, 245, 0.40); }
+    .ask-bar .kbd {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-family: ui-monospace, monospace; font-size: 9.5px;
+      color: rgba(244, 244, 245, 0.45);
+      padding: 2px 5px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+    }
+    .ask-bar .send-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      border: none; color: #FFFFFF; font-size: 12px;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: filter 0.12s;
+    }
+    .ask-bar .send-btn:hover { filter: brightness(1.15); }
+    .ask-bar .send-btn:disabled { opacity: 0.4; cursor: wait; }
+
+    .ask-foot {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px; padding-left: 4px;
+    }
+    .smart-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px;
+      font-size: 10.5px; font-weight: 700;
+      color: rgba(244, 244, 245, 0.78);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .smart-chip.active {
+      color: #FFD60A;
+      background: rgba(255, 214, 10, 0.10);
+      border-color: rgba(255, 214, 10, 0.32);
+    }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255, 214, 10, 0.20);
+      border-top-color: #FFD60A;
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+      display: inline-block; vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Onboarding panel */
+    .onb { padding: 24px 22px; text-align: center; }
+    .onb h2 {
+      margin: 8px 0 6px;
+      font-size: 16px; font-weight: 800; color: #FFFFFF;
+    }
+    .onb p {
+      color: rgba(244, 244, 245, 0.72);
+      font-size: 12px; line-height: 1.5;
+      margin: 0 0 16px;
+    }
+    .onb input {
+      width: 100%; padding: 10px 12px; margin-bottom: 8px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 8px; color: #F4F4F5;
+      font-family: inherit; font-size: 12.5px;
+      -webkit-user-select: text; user-select: text;
+    }
+    .onb input:focus { outline: none; border-color: #FFD60A; }
+    .onb .btn-primary {
+      display: block; width: 100%; padding: 10px;
+      background: linear-gradient(135deg, #FFD60A, #F59E0B);
+      color: #0A0A0B; border: none; border-radius: 8px;
+      font-weight: 800; font-size: 13px;
+      cursor: pointer; font-family: inherit;
+    }
+    .onb .install-hint {
+      margin-top: 14px; font-size: 10.5px;
+      color: rgba(244, 244, 245, 0.55); line-height: 1.5;
+    }
+
+    @keyframes attn-pulse {
+      0%, 100% { box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 214, 10, 0.20) inset; }
+      50%      { box-shadow: 0 12px 32px -8px rgba(255, 214, 10, 0.45), 0 0 0 2px rgba(255, 214, 10, 0.55) inset; }
+    }
+    .capsule.attn { animation: attn-pulse 1.4s ease-in-out 3; }
+
+    .toast {
+      position: absolute; top: -36px;
+      left: 50%; transform: translateX(-50%);
+      padding: 6px 14px;
+      background: rgba(15, 15, 18, 0.95);
+      border: 1px solid rgba(34, 197, 94, 0.55);
+      border-radius: 999px;
+      font-size: 11.5px; color: #86EFAC;
+      white-space: nowrap;
+      backdrop-filter: blur(24px);
+      animation: toast-pop 1.8s ease forwards;
+      pointer-events: none;
+    }
+    .toast.err {
+      border-color: rgba(239, 68, 68, 0.55);
+      color: #FCA5A5;
+    }
+    @keyframes toast-pop {
+      0%   { opacity: 0; transform: translate(-50%, 4px); }
+      15%  { opacity: 1; transform: translate(-50%, 0); }
+      85%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -6px); }
+    }
+
+    /* ──────────────────────────────────────────────────────────────
+       DASHBOARD / MENU — opens from ≡ button, full settings + stats
+       ────────────────────────────────────────────────────────────── */
+    .dash {
+      margin-top: 8px;
+      padding: 0;
+      background: rgba(15, 15, 18, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.55);
+      animation: panel-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 540px;
+      overflow-y: auto;
+    }
+    .dash.hidden { display: none; }
+    .dash::-webkit-scrollbar { width: 6px; }
+    .dash::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08); border-radius: 3px;
+    }
+
+    .dash-hdr {
+      position: sticky; top: 0; z-index: 2;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(15, 15, 18, 0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .dash-hdr h3 {
+      margin: 0; font-size: 12px; font-weight: 800;
+      color: #FFD60A; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .dash-hdr .x-btn {
+      width: 22px; height: 22px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 50%;
+      cursor: pointer; color: #F4F4F5;
+      font-size: 11px;
+    }
+    .dash-hdr .x-btn:hover { background: rgba(239, 68, 68, 0.18); border-color: rgba(239, 68, 68, 0.45); }
+
+    .dash-body { padding: 6px 14px 14px; }
+
+    .dash-section {
+      padding: 10px 0 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .dash-section:last-child { border-bottom: none; }
+    .dash-section h4 {
+      margin: 0 0 8px; font-size: 10px; font-weight: 700;
+      color: rgba(244, 244, 245, 0.45);
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .dash-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      margin-bottom: 4px;
+    }
+    .dash-stat {
+      padding: 9px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .dash-stat .v {
+      font-size: 16px; font-weight: 800; color: #F4F4F5;
+      line-height: 1.1;
+    }
+    .dash-stat .l {
+      font-size: 9.5px; color: rgba(244, 244, 245, 0.55);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .dash-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0;
+      gap: 10px;
+    }
+    .dash-row .label {
+      font-size: 12px; color: rgba(244, 244, 245, 0.85);
+      flex: 1; min-width: 0;
+    }
+    .dash-row .label .sub {
+      display: block; font-size: 10.5px; color: rgba(244, 244, 245, 0.45);
+      margin-top: 2px;
+    }
+    .dash-row .value {
+      font-size: 11px; color: rgba(244, 244, 245, 0.65);
+      font-family: ui-monospace, monospace;
+      max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .toggle {
+      position: relative;
+      width: 32px; height: 18px;
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 999px; cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      background: #F4F4F5; border-radius: 50%;
+      transition: transform 0.18s ease;
+    }
+    .toggle.on { background: rgba(255, 214, 10, 0.65); }
+    .toggle.on::after { transform: translateX(14px); background: #FFD60A; }
+
+    .slider {
+      width: 100%; height: 4px;
+      -webkit-appearance: none; appearance: none;
+      background: rgba(255, 255, 255, 0.12); border-radius: 999px;
+      cursor: pointer;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 14px; height: 14px;
+      background: #FFD60A; border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(255, 214, 10, 0.45);
+    }
+
+    .dash-btn {
+      -webkit-app-region: no-drag;
+      padding: 5px 10px;
+      font-family: inherit; font-size: 11px; font-weight: 600;
+      color: rgba(244, 244, 245, 0.85);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 6px; cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .dash-btn:hover {
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #F4F4F5;
+    }
+    .dash-btn.primary {
+      background: rgba(255, 214, 10, 0.18);
+      border-color: rgba(255, 214, 10, 0.45);
+      color: #FFD60A;
+    }
+    .dash-btn.primary:hover {
+      background: rgba(255, 214, 10, 0.30);
+      border-color: rgba(255, 214, 10, 0.70);
+    }
+    .dash-btn.danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.40);
+      color: #FCA5A5;
+    }
+    .dash-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.30);
+    }
+
+    .integ-list {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    }
+    .integ-pill {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .integ-pill .n { display: flex; align-items: center; gap: 6px; }
+    .integ-pill .ic {
+      width: 18px; height: 18px; border-radius: 4px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .integ-pill .st {
+      font-size: 9.5px; padding: 2px 6px; border-radius: 4px;
+      font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .integ-pill .st.connected { color: #86EFAC; background: rgba(34, 197, 94, 0.15); }
+    .integ-pill .st.notconnected { color: rgba(244, 244, 245, 0.40); background: rgba(255, 255, 255, 0.04); }
+
+    .dash-foot {
+      display: flex; gap: 8px; justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.18);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .dash-foot .meta {
+      font-size: 10px; color: rgba(244, 244, 245, 0.40);
+      display: flex; align-items: center; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="capsule" class="capsule">
+    <div class="cap-brand">
+      <div class="logo">K</div>
+      <span>Klosr</span>
+    </div>
+    <div id="cap-status" class="cap-status">
+      <span class="dot"></span>
+      <span id="cap-status-text">Click ▶ to start</span>
+    </div>
+    <button class="cap-btn primary" id="btn-start"><span class="ico">▶</span><span>Start</span></button>
+    <button class="cap-btn" id="btn-dash" title="Dashboard">≡</button>
+    <button class="cap-btn" id="btn-toggle">Show</button>
+    <button class="cap-btn" id="btn-quit" title="Quit Klosr">×</button>
+  </div>
+
+  <div id="panel" class="panel hidden">
+    <div id="panel-content">
+      <div class="panel-source"><span class="badge">Watch</span><span>Waiting for a sales-relevant screen change…</span></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD / MENU PANEL -->
+  <div id="dashboard" class="dash hidden">
+    <div class="dash-hdr">
+      <h3>Klosr Dashboard</h3>
+      <button class="x-btn" id="dash-close" title="Close">×</button>
+    </div>
+
+    <div class="dash-body">
+      <!-- Today stats -->
+      <div class="dash-section">
+        <h4>Today</h4>
+        <div class="dash-stats">
+          <div class="dash-stat"><div class="v" id="stat-drafts">0</div><div class="l">Drafts</div></div>
+          <div class="dash-stat"><div class="v" id="stat-sent">0</div><div class="l">Sent</div></div>
+          <div class="dash-stat"><div class="v" id="stat-watch">0m</div><div class="l">Watching</div></div>
+        </div>
+      </div>
+
+      <!-- Watch controls -->
+      <div class="dash-section">
+        <h4>Watch Mode</h4>
+        <div class="dash-row">
+          <div class="label">Auto-watch on launch
+            <span class="sub">Start Watch automatically when Klosr opens</span>
+          </div>
+          <div class="toggle" id="set-autostart" data-setting="autostart"></div>
+        </div>
+        <div class="dash-row">
+          <div class="label">OS notifications
+            <span class="sub">Toast when a hot reply is detected</span>
+          </div>
+          <div class="toggle on" id="set-notify" data-setting="notifications"></div>
+        </div>
+        <div class="dash-row">
+          <div class="label">Pulse on hot reply
+            <span class="sub">Animate the capsule when temperature ≥ HOT</span>
+          </div>
+          <div class="toggle on" id="set-pulse" data-setting="pulse"></div>
+        </div>
+        <div class="dash-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label">Sensitivity
+            <span class="sub">Higher = catch more changes (more API calls)</span>
+          </div>
+          <input type="range" min="0" max="100" value="50" id="set-sens" class="slider" />
+        </div>
+      </div>
+
+      <!-- Integrations -->
+      <div class="dash-section">
+        <h4>Integrations</h4>
+        <div class="integ-list" id="integ-list">
+          <div class="integ-pill"><div class="n"><span class="ic" style="background:rgba(255,122,0,0.15);color:#FF7A00">H</span>HubSpot</div><span class="st notconnected" data-int="hubspot">Not connected</span></div>
+          <div class="integ-pill"><div class="n"><span class="ic" style="background:rgba(0,161,228,0.15);color:#00A1E4">S</span>Salesforce</div><span class="st notconnected" data-int="salesforce">Not connected</span></div>
+          <div class="integ-pill"><div class="n"><span class="ic" style="background:rgba(0,200,83,0.15);color:#00C853">P</span>Pipedrive</div><span class="st notconnected" data-int="pipedrive">Not connected</span></div>
+          <div class="integ-pill"><div class="n"><span class="ic" style="background:rgba(74,21,75,0.18);color:#C5A3D6">⌬</span>Slack</div><span class="st notconnected" data-int="slack">Not connected</span></div>
+        </div>
+        <button class="dash-btn" id="dash-manage-integ" style="width:100%;margin-top:8px">Manage integrations on klosr.com</button>
+      </div>
+
+      <!-- Account -->
+      <div class="dash-section">
+        <h4>Account</h4>
+        <div class="dash-row">
+          <div class="label">Install ID</div>
+          <div class="value" id="dash-iid">—</div>
+        </div>
+        <div class="dash-row">
+          <div class="label">Plan
+            <span class="sub" id="dash-plan-sub">Trial · 14 days remaining</span>
+          </div>
+          <div><span class="dash-btn primary" id="dash-upgrade">Upgrade</span></div>
+        </div>
+        <div class="dash-row">
+          <div class="label">Voice profile</div>
+          <div class="value" id="dash-voice">—</div>
+        </div>
+        <div class="dash-row" style="margin-top:6px">
+          <button class="dash-btn" id="dash-relink" style="flex:1">Re-link install ID</button>
+          <button class="dash-btn" id="dash-signout" style="flex:1">Sign out</button>
+        </div>
+      </div>
+
+      <!-- Privacy & Logs -->
+      <div class="dash-section">
+        <h4>Privacy &amp; Data</h4>
+        <div class="dash-row">
+          <div class="label">Local screenshots
+            <span class="sub">Frames sent to Vision are never stored on disk</span>
+          </div>
+          <div class="value" style="color:#86EFAC">Off</div>
+        </div>
+        <div class="dash-row" style="margin-top:6px">
+          <button class="dash-btn" id="dash-privacy" style="flex:1">Privacy policy</button>
+          <button class="dash-btn" id="dash-clear" style="flex:1">Clear local data</button>
+        </div>
+      </div>
+
+      <!-- About / Support -->
+      <div class="dash-section">
+        <h4>About</h4>
+        <div class="dash-row">
+          <div class="label">Version</div>
+          <div class="value" id="dash-version">0.2.2</div>
+        </div>
+        <div class="dash-row">
+          <div class="label">Hotkey
+            <span class="sub">Show/hide Klosr from anywhere</span>
+          </div>
+          <div class="value" id="dash-hotkey">Ctrl+Shift+K</div>
+        </div>
+        <div class="dash-row" style="margin-top:6px">
+          <button class="dash-btn" id="dash-checkupd" style="flex:1">Check for updates</button>
+          <button class="dash-btn" id="dash-support" style="flex:1">Contact support</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-foot">
+      <div class="meta">
+        <span>© 2026 Klosr</span>
+        <span>·</span>
+        <span id="foot-status">Idle</span>
+      </div>
+      <button class="dash-btn danger" id="dash-quit">Quit Klosr</button>
+    </div>
+  </div>
+
+  <div id="onboarding" class="panel hidden">
+    <div class="onb">
+      <h2>Connect Klosr to your account</h2>
+      <p>Paste your Klosr install ID. Klosr Desktop will sync your voice, ICP, and proof library automatically.</p>
+      <input type="text" id="onb-iid" placeholder="Klosr install ID" autocomplete="off" />
+      <button class="btn-primary" id="onb-connect">Connect</button>
+      <div class="install-hint">
+        Open Klosr Chrome extension on any LinkedIn profile → click <strong>🖥️ Klosr Desktop (Watch)</strong> chip → Copy Install ID.
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

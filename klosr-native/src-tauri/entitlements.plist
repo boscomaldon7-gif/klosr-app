@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTD/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Required for screen capture (Phase 2) on macOS 11+ -->
+    <key>com.apple.security.device.audio-input</key>
+    <false/>
+    <key>com.apple.security.device.camera</key>
+    <false/>
+
+    <!-- Phase 3: Accessibility for native text injection.
+         User must additionally grant Klosr in System Settings → Privacy &
+         Security → Accessibility on first run. -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+
+    <!-- Network — Klosr backend + Anthropic + integrations -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Sandbox: disabled for v0.1 because screen capture + accessibility
+         APIs require unsandboxed access. App Store distribution requires
+         sandbox; we'll re-evaluate before App Store submission. -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+</dict>
+</plist>

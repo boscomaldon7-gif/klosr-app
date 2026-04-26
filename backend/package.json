@@ -1,0 +1,13 @@
+{
+  "name": "klosr-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Klosr Vercel serverless backend — analyze, chat, email, enrichment endpoints",
+  "type": "module",
+  "engines": {
+    "node": ">=18.x"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0"
+  }
+}

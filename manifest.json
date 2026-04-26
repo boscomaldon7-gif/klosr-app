@@ -1,0 +1,70 @@
+{
+  "manifest_version": 3,
+  "name": "Klosr: Close More. Faster.",
+  "version": "4.5.2",
+  "description": "Your sales co-pilot on LinkedIn + in-call + WhatsApp + Gmail. Klosr reads your screen, drafts replies in your voice, auto-fills the composer. Close more, faster.",
+  "permissions": ["activeTab", "storage", "tabCapture", "scripting", "notifications"],
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "https://meet.google.com/*",
+    "https://*.zoom.us/*",
+    "https://teams.microsoft.com/*",
+    "https://teams.live.com/*",
+    "https://web.whatsapp.com/*",
+    "https://mail.google.com/*",
+    "https://app.slack.com/*"
+  ],
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/in/*",
+        "https://www.linkedin.com/search/*",
+        "https://www.linkedin.com/sales/*"
+      ],
+      "js": ["content.js"],
+      "css": ["sidebar.css"]
+    },
+    {
+      "matches": [
+        "https://www.linkedin.com/messaging/*"
+      ],
+      "js": ["messaging-watcher.js"]
+    },
+    {
+      "matches": [
+        "https://web.whatsapp.com/*",
+        "https://mail.google.com/*",
+        "https://app.slack.com/*",
+        "https://teams.microsoft.com/*",
+        "https://teams.live.com/*"
+      ],
+      "js": ["web-injector.js"]
+    },
+    {
+      "matches": [
+        "https://meet.google.com/*",
+        "https://*.zoom.us/j/*",
+        "https://*.zoom.us/wc/*",
+        "https://teams.microsoft.com/*",
+        "https://teams.live.com/*"
+      ],
+      "js": ["call-overlay.js"],
+      "css": ["call-overlay.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

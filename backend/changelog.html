@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Changelog — Klosr</title>
+  <link rel="icon" type="image/png" href="/icons/icon128.png">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <header class="site-nav">
+    <a href="/" class="brand"><span class="brand-badge">K</span><span class="brand-name">Klosr</span></a>
+    <nav>
+      <a href="/pricing">Pricing</a>
+      <a href="/install">Install</a>
+      <a href="/changelog">Changelog</a>
+      <a href="/app.html" class="cta-mini">Klosr Desktop →</a>
+    </nav>
+  </header>
+
+  <main>
+    <article class="content-page">
+      <h1>Changelog</h1>
+      <div class="sub">Every shipping moment, in reverse chronological order. Built in public.</div>
+
+      <h2>v4.5.2 — 24 April 2026</h2>
+      <p>Cross-app moat closed. Slack Web + Microsoft Teams Web added to the auto-fill loop. Pipedrive + Salesforce CRM integrations live. Klosr Desktop + Watch finalized. Public marketing site shipped.</p>
+      <ul>
+        <li>🔌 <strong>Slack Web auto-fill</strong> — Klosr drafts in PWA Watch, you click 📤 Slack, the composer auto-fills on your Slack tab.</li>
+        <li>🔌 <strong>Microsoft Teams Web auto-fill</strong> — same pattern, Teams composer.</li>
+        <li>📤 <strong>Cross-tab Chrome notifications</strong> — when a pending draft lands and you're not on that tab, OS notification fires so you know to switch over.</li>
+        <li>📊 <strong>Pipedrive integration</strong> — paste your API token, Klosr pushes deals as Person + Org + Deal in one atomic flow.</li>
+        <li>🗂️ <strong>Salesforce OAuth</strong> — full scaffold + callback handler. Connected App on the admin side, then one-click connect, deals push as Leads.</li>
+        <li>🧩 <strong>HubSpot OAuth callback</strong> — completes the integration that was scaffolded in v4.5.0.</li>
+        <li>🖥️ <strong>"Klosr Desktop (Watch)"</strong> chip in the Chrome extension sidebar — discoverability fix; one-click open + install ID copy.</li>
+        <li>📣 <strong>Public marketing site</strong> — landing, pricing, install, privacy, terms, changelog. Domain alias coming next.</li>
+      </ul>
+
+      <h2>v4.5.1 — 23 April 2026</h2>
+      <p>Klosr Watch evolves. Cross-app reply auto-fill (WhatsApp Web + Gmail). State sync extension → Upstash → PWA so Watch drafts use your real proof + voice. Anti-throttle keepalive so Watch survives backgrounded tabs.</p>
+      <ul>
+        <li>📤 <strong>WhatsApp Web auto-fill</strong> — extension content script picks up pending replies queued by PWA Watch, auto-fills the WhatsApp composer.</li>
+        <li>📤 <strong>Gmail auto-fill</strong> — same pattern for Gmail web compose / reply panes.</li>
+        <li>🔄 <strong>State sync</strong> — Chrome extension pushes proof library + objection playbook + voice examples + ICP learnings to Upstash. Klosr Desktop pulls them in pwa-bootstrap. Watch drafts now feel like YOU wrote them.</li>
+        <li>⚡ <strong>Anti-throttle</strong> — Watch uses Web Audio keepalive + Wake Lock to survive Chrome's background tab throttling. Runs while you work.</li>
+        <li>📊 Pending-reply queue actions: <code>queue-pending-reply</code> + <code>fetch-pending-reply</code> with 5-min TTL.</li>
+      </ul>
+
+      <h2>v4.5.0 — 23 April 2026</h2>
+      <p>Two huge moves: Klosr Vision (multimodal screenshot paste) and Klosr Desktop (PWA, installable as a native-like app). Scaffolded HubSpot, Slack webhook, weekly brag-post generator. Foundation for cross-platform reactive Klosr.</p>
+      <ul>
+        <li>👁️ <strong>Klosr Vision</strong> — paste any screenshot (WhatsApp, email, Slack, anywhere), Claude Sonnet 4.5 reads it, drafts the action. Both in extension and PWA.</li>
+        <li>🖥️ <strong>Klosr Desktop (PWA)</strong> — installable web app. Standalone window, dock/taskbar icon, lives outside the browser tabs.</li>
+        <li>🔥 <strong>Weekly brag-post generator</strong> — turn your week's numbers into a LinkedIn post drafted in your voice.</li>
+        <li>🧩 <strong>HubSpot OAuth + push-deal</strong> — scaffold (callback page came in v4.5.2).</li>
+        <li>💬 <strong>Slack incoming-webhook integration</strong> — paste a webhook URL, alerts go to your channel.</li>
+        <li>🧠 <strong>Sonnet 4.5 → Opus 4.7</strong> upgrade for screenshot-analyze, weekly-brag-post, deal-revival-draft (the three high-stakes outputs).</li>
+      </ul>
+
+      <h2>v4.4.0 — 22 April 2026</h2>
+      <p>The "let me actually close this" release. One-click LinkedIn DM send, hot-reply Chrome notifications, auto-scheduled day-4 + day-9 follow-ups.</p>
+      <ul>
+        <li>📤 <strong>One-click "Send via Klosr"</strong> on warm-lead cards. Auto-fills LinkedIn's native message composer.</li>
+        <li>🔔 <strong>Hot-reply Chrome notifications</strong> — content script on linkedin.com/messaging fires native OS notifications when a pipeline contact replies.</li>
+        <li>📅 <strong>Auto-scheduled follow-ups</strong> — every DM sent → day-4 + day-9 commitments auto-created in Daily Close. No more "I forgot to follow up".</li>
+      </ul>
+
+      <h2>v4.3.0 — 23 April 2026</h2>
+      <p>Daily Close Dashboard. Deal temperature scoring. The "what do I do today to close" reorientation.</p>
+      <ul>
+        <li>⚡ <strong>Daily Close Dashboard</strong> — top 12 ranked actions, money KPIs, deal temperature distribution, hot deals list.</li>
+        <li>🌡️ <strong>Deal temperature</strong> — every deal scored hot/warm/cold/frozen with reason. Visible on every pipeline card.</li>
+        <li>🧊 <strong>Revive button</strong> — auto-drafts re-engagement messages anchored to fresh company news (SerpApi).</li>
+        <li>👥 <strong>Multi-thread suggestions</strong> — late-stage deal? Klosr finds 2-4 other decision-makers at the same company via Apollo.</li>
+        <li>📥 <strong>Enhanced handle-reply</strong> — adds temperature, urgency, suggestedProof from your library.</li>
+        <li>📊 <strong>"Already in pipeline"</strong> badge on warm leads to prevent duplicate work.</li>
+      </ul>
+
+      <h2>v4.2.0 — 21 April 2026</h2>
+      <p>Klosr deal pipeline rebuilt around closing. Removed interview/pitch modes. Won deals → proof library. Stuck-deal alerts.</p>
+      <ul>
+        <li>📊 <strong>Deal Pipeline view</strong> — stages, commitments with dueBy, won/lost tracking, weighted revenue.</li>
+        <li>👻 <strong>Auto-ghost stale deals</strong> — 14d+ silent deals auto-flagged.</li>
+        <li>🔑 <strong>Won deal → proof library extraction</strong> — Claude pulls out reusable proof points from your closing notes.</li>
+        <li>🚨 <strong>Stuck-deal alerts</strong> — negotiation 14d+, closing 7d+, objection 10d+.</li>
+        <li>📅 <strong>Inline due-date editor</strong> on commitments.</li>
+      </ul>
+
+      <h2>v4.1.0 — 20 April 2026</h2>
+      <ul>
+        <li>📚 <strong>Full Dossier ("Know them cold")</strong> with Spanish + bold-markdown + 11 sections + cache.</li>
+        <li>🎤 <strong>Live Assist evolved</strong> — diarization (speaker separation), talk-ratio bar, 12-signal coach, 1Hz gated coach loop.</li>
+        <li>📞 <strong>Apollo</strong> replaces LeadMagic for email + phone discovery.</li>
+        <li>📊 <strong>Admin panel</strong> with Upstash-backed user analytics + event log.</li>
+      </ul>
+
+      <h2>v4.0.0 — 18 April 2026</h2>
+      <ul>
+        <li>📞 <strong>Live AI Assist</strong> on Meet/Zoom/Teams calls — Deepgram Nova-3 streaming + Claude coach.</li>
+        <li>🤝 <strong>Warm Leads</strong> tab with ICP scoring, mutual connections, bulk actions.</li>
+        <li>🧠 Initial Klosr Vision research mode.</li>
+      </ul>
+
+      <hr>
+
+      <h2>What's coming</h2>
+      <p>Roadmap. Things we're actively building or scoping:</p>
+
+      <ul>
+        <li><strong>Native Tauri desktop app</strong> — replaces the PWA. Menu bar / system tray. Reads native WhatsApp Desktop / Slack Desktop / etc. without the browser screen-share banner. Auto-injects text directly into native composers via OS accessibility APIs. Target: 4 weeks. Pro users get it free.</li>
+        <li><strong>Salesforce token refresh</strong> — currently tokens expire after 15min-2h, user reconnects. Auto-refresh in v2.</li>
+        <li><strong>Bi-directional HubSpot sync</strong> — pull existing deals/contacts from your portal into Klosr pipeline.</li>
+        <li><strong>Full Slack OAuth app</strong> (vs. webhook) — slash commands, interactive buttons, thread-replies. Pending Slack App Directory submission.</li>
+        <li><strong>Gmail / Outlook native OAuth</strong> — move email beyond Vision into native read+send. Long lead time (Google Workspace + Microsoft Graph review).</li>
+        <li><strong>Klosr for Teams SKU</strong> — multi-seat workspace, shared playbooks, admin-level analytics.</li>
+        <li><strong>Public Chrome Web Store listing</strong> — currently beta-distributed via zip, going public after pre-launch shake-out.</li>
+      </ul>
+
+      <p style="margin-top: 30px; font-size: 13px; color: rgba(244,244,245,0.55);">
+        Want to see something specific shipped? Email <a href="mailto:hello@klosr.com" style="color:#FFD60A">hello@klosr.com</a>. Founder requests jump to the front of the queue.
+      </p>
+    </article>
+  </main>
+
+  <footer class="site-foot">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand"><span class="brand-badge">K</span> Klosr</div>
+        <div class="foot-tag">Sales OS for founders. Close more, faster.</div>
+      </div>
+      <div>
+        <div class="foot-h">Product</div>
+        <a href="/install">Install</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/changelog">Changelog</a>
+        <a href="/app.html">Klosr Desktop</a>
+      </div>
+      <div>
+        <div class="foot-h">Legal</div>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+      <div>
+        <div class="foot-h">Built by</div>
+        <a href="https://www.linkedin.com/in/bosco-maldonado/" target="_blank" rel="noopener">Bosco Maldonado Arias</a>
+        <a href="mailto:hello@klosr.com">hello@klosr.com</a>
+      </div>
+    </div>
+    <div class="foot-tail">© 2026 Klosr. Built by founders, for founders.</div>
+  </footer>
+</body>
+</html>

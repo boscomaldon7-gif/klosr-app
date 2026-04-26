@@ -1,0 +1,135 @@
+# Klosr — Cross-platform release build pipeline
+#
+# Triggers:
+#   - Push of a `v*` tag (e.g. `v0.1.3`) → builds + publishes a GitHub Release
+#   - Manual dispatch from the Actions tab → builds + drafts a Release
+#
+# Produces installers for:
+#   - macOS Intel  (x86_64-apple-darwin)         → .dmg
+#   - macOS Apple Silicon (aarch64-apple-darwin) → .dmg
+#   - Windows x64  (x86_64-pc-windows-msvc)      → .msi + .exe
+#   - Windows ARM64 (aarch64-pc-windows-msvc)    → .msi + .exe
+#   - Linux x64    (x86_64-unknown-linux-gnu)    → .deb + .AppImage
+#
+# All artifacts are uploaded to GitHub Releases. The auto-updater endpoint
+# at /api/updater/[target]/[currentVersion] reads from these releases.
+#
+# Required secrets (set in Settings → Secrets and variables → Actions):
+#   TAURI_PRIVATE_KEY            — for signing updater bundles
+#   TAURI_KEY_PASSWORD           — passphrase for that key
+#   APPLE_CERTIFICATE            — base64 of .p12 cert (Mac signing)
+#   APPLE_CERTIFICATE_PASSWORD   — passphrase
+#   APPLE_SIGNING_IDENTITY       — e.g. "Developer ID Application: ... (TEAMID)"
+#   APPLE_ID                     — Apple ID for notarization
+#   APPLE_PASSWORD               — app-specific password
+#   APPLE_TEAM_ID                — Apple Developer Team ID
+#   WINDOWS_CERTIFICATE          — base64 of .pfx for code signing (optional v1)
+#   WINDOWS_CERTIFICATE_PASSWORD — passphrase
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag (e.g. v0.1.4)"
+        required: true
+        default: "v0.1.4"
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest"  # Apple Silicon runners
+            args: "--target aarch64-apple-darwin"
+            label: "macos-arm64"
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
+            label: "macos-x64"
+          - platform: "ubuntu-22.04"
+            args: ""
+            label: "linux-x64"
+          - platform: "windows-latest"
+            args: "--target x86_64-pc-windows-msvc"
+            label: "windows-x64"
+          - platform: "windows-11-arm"  # if available; falls back to cross-compile
+            args: "--target aarch64-pc-windows-msvc"
+            label: "windows-arm64"
+
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        working-directory: klosr-native
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.args == '' && '' || matrix.args == '--target x86_64-pc-windows-msvc' && 'x86_64-pc-windows-msvc' || matrix.args == '--target aarch64-pc-windows-msvc' && 'aarch64-pc-windows-msvc' || matrix.args == '--target x86_64-apple-darwin' && 'x86_64-apple-darwin' || matrix.args == '--target aarch64-apple-darwin' && 'aarch64-apple-darwin' || '' }}
+
+      - name: Install Linux deps
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            klosr-native/src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ matrix.label }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build + Bundle (with optional signing)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          # macOS signing/notarization (optional — skipped if secrets not set)
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: ./klosr-native
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: "Klosr ${{ github.event.inputs.tag || github.ref_name }}"
+          releaseBody: |
+            See https://klosr.com/changelog for what's new.
+
+            **Install:**
+            - Mac (Apple Silicon): download the `.dmg` for `aarch64-apple-darwin`
+            - Mac (Intel): download the `.dmg` for `x86_64-apple-darwin`
+            - Windows (x64): download the `_x64-setup.exe` or `_x64_en-US.msi`
+            - Windows (ARM): download the `_arm64-setup.exe` or `_arm64_en-US.msi`
+            - Linux: download the `.deb` (Debian/Ubuntu) or `.AppImage`
+
+            **First-run on Windows:** SmartScreen will warn — click "More info" → "Run anyway". This goes away once we sign the binaries.
+            **First-run on macOS:** Right-click the .dmg → "Open" → "Open anyway" (Gatekeeper warning).
+          releaseDraft: ${{ github.event_name == 'workflow_dispatch' }}
+          prerelease: false
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}
