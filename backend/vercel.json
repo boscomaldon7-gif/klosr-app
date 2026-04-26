@@ -26,7 +26,11 @@
     { "source": "/app",              "destination": "/app.html" },
     { "source": "/upgrade-success",  "destination": "/upgrade-success.html" },
     { "source": "/auth-verify",      "destination": "/auth-verify.html" },
-    { "source": "/r/:code",          "destination": "/r.html" }
+    { "source": "/r/:code",          "destination": "/r.html" },
+    { "source": "/updater/:target/:current_version",
+      "destination": "/api/updater?target=:target&current_version=:current_version" },
+    { "source": "/api/updater/:target/:current_version",
+      "destination": "/api/updater?target=:target&current_version=:current_version" }
   ],
   "redirects": [
     { "source": "/download",         "destination": "/install", "permanent": false }
