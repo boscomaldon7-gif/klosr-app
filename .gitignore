@@ -11,7 +11,7 @@
 
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json IS committed — required by `npm ci` in CI
 
 # Tauri build artifacts (huge — ~5GB if committed)
 klosr-native/src-tauri/target/
