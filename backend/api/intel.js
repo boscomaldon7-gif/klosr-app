@@ -338,12 +338,57 @@ function apolloCompactPerson(p) {
     }
   }
 
-  const phones = Array.isArray(p.phone_numbers) ? p.phone_numbers.slice(0, 4).map(ph => ({
-    number: ph.raw_number || ph.sanitized_number || "",
-    sanitized: (ph.sanitized_number || ph.raw_number || "").replace(/[^\d+]/g, ""),
-    type: String(ph.type || "other").toLowerCase(),
-    verified: String(ph.status || "").toLowerCase() === "verified",
-  })).filter(p => p.sanitized) : [];
+  // Phone extraction — collect from every shape Apollo uses, reject
+  // reveal-denied placeholders, dedupe on E.164 form. Same logic as
+  // find-email.js so bulk-enriched leads + single-profile lookups behave
+  // identically. Capped at 4 — UI never shows more.
+  const phoneSources = [];
+  if (Array.isArray(p.phone_numbers)) phoneSources.push(...p.phone_numbers);
+  if (Array.isArray(p.sanitized_phone_numbers)) phoneSources.push(...p.sanitized_phone_numbers);
+  if (p.contact && typeof p.contact === "object") {
+    if (Array.isArray(p.contact.phone_numbers)) phoneSources.push(...p.contact.phone_numbers);
+    if (Array.isArray(p.contact.sanitized_phone_numbers)) phoneSources.push(...p.contact.sanitized_phone_numbers);
+  }
+  if (org && typeof org === "object" && Array.isArray(org.phone_numbers)) {
+    for (const op of org.phone_numbers) {
+      if (op && typeof op === "object") phoneSources.push({ ...op, type: op.type || "work_hq" });
+    }
+  }
+  if (typeof p.phone === "string" && p.phone.trim()) {
+    phoneSources.push({ raw_number: p.phone, sanitized_number: p.phone, type: "other" });
+  }
+
+  const isPlaceholderPhone = (raw, digits) => {
+    if (!digits || digits === "+") return true;
+    if (/(?:unlocked|locked|redacted|hidden|placeholder|n\/a)/i.test(raw)) return true;
+    const onlyDigits = digits.replace(/^\+/, "");
+    if (onlyDigits.length < 7) return true;
+    if (/^0+$/.test(onlyDigits)) return true;
+    if (/^(\d)\1+$/.test(onlyDigits)) return true;
+    return false;
+  };
+  const e164 = (digits) => "+" + digits.replace(/^\+/, "").replace(/[^\d]/g, "");
+
+  const seenPhones = new Set();
+  const phones = [];
+  for (const ph of phoneSources) {
+    if (!ph || typeof ph !== "object") continue;
+    const raw = String(ph.raw_number || ph.sanitized_number || "").trim();
+    const sanitized = String(ph.sanitized_number || ph.raw_number || "").trim();
+    if (!raw || !sanitized) continue;
+    const digits = sanitized.replace(/[^\d+]/g, "");
+    if (isPlaceholderPhone(raw, digits)) continue;
+    const key = e164(digits);
+    if (seenPhones.has(key)) continue;
+    seenPhones.add(key);
+    phones.push({
+      number: raw,
+      sanitized: digits,
+      type: String(ph.type || "other").toLowerCase(),
+      verified: String(ph.status || "").toLowerCase() === "verified",
+    });
+    if (phones.length >= 4) break;
+  }
 
   return {
     apolloId: p.id || "",
@@ -431,10 +476,14 @@ async function actionApolloPeopleSearch(params) {
   const locations = Array.isArray(params.locations) ? params.locations.slice(0, 10) : [];
   const headcountMin = Number(params.headcountMin) || 0;
   const headcountMax = Number(params.headcountMax) || 0;
+  // Seniority filter — Apollo expects values from a fixed vocabulary:
+  // c_suite, vp, head, director, manager, senior, entry, owner, founder,
+  // partner. We accept any of these and pass through (capped at 10).
+  const seniorities = Array.isArray(params.seniorities) ? params.seniorities.slice(0, 10) : [];
   const limit = Math.min(Math.max(Number(params.limit) || 10, 1), 25);
   const page = Math.max(Number(params.page) || 1, 1);
 
-  if (!keywords && titles.length === 0 && industries.length === 0) {
+  if (!keywords && titles.length === 0 && industries.length === 0 && seniorities.length === 0) {
     return { people: [], reason: "missing_filters" };
   }
 
@@ -448,6 +497,7 @@ async function actionApolloPeopleSearch(params) {
   if (titles.length) body.person_titles = titles;
   if (industries.length) body.q_organization_keyword_tags = industries;
   if (locations.length) body.person_locations = locations;
+  if (seniorities.length) body.person_seniorities = seniorities;
   if (headcountMin > 0 || headcountMax > 0) {
     // Apollo wants the format "1,10" / "11,50" / "51,200" etc.
     body.organization_num_employees_ranges = [
@@ -477,12 +527,16 @@ async function actionApolloBulkEnrich(params) {
   const urls = Array.isArray(params.linkedinUrls) ? params.linkedinUrls.slice(0, 25) : [];
   if (urls.length === 0) return { matches: [], reason: "missing_urls" };
 
-  // Phone reveal is async-only on Apollo — requires a webhook_url. We only
-  // enable it when APOLLO_PHONE_WEBHOOK_URL is set on the server. Otherwise
-  // Apollo 400s the whole request. Most callers should leave this off and
-  // just use emails; phones can be enabled later when a webhook handler
-  // is deployed.
-  const revealPhones = params.revealPhones === true && !!process.env.APOLLO_PHONE_WEBHOOK_URL;
+  // Phone reveal is default-ON. Apollo's bulk_match returns
+  // previously-revealed (cached) phones synchronously when
+  // `reveal_phone_number: true` is set on each detail — webhook is only
+  // needed for ASYNC fresh reveals against records that have never been
+  // unlocked. So we always request phones; the webhook URL is attached
+  // only when the env var is present (turning on the async-fresh path).
+  // Caller can opt out with `revealPhones: false` to skip the phone
+  // credit cost entirely (e.g. deep-research, which fetches phones via
+  // a separate find-email call).
+  const revealPhones = params.revealPhones !== false;
   const webhookUrl = process.env.APOLLO_PHONE_WEBHOOK_URL || "";
 
   // Try the bulk endpoint first (Pro+ plans). If it returns plan-required,
@@ -499,7 +553,12 @@ async function actionApolloBulkEnrich(params) {
     const details = chunk.map(u => ({
       linkedin_url: u,
       reveal_personal_emails: true,
-      ...(revealPhones ? { reveal_phone_number: true, webhook_url: webhookUrl } : {}),
+      ...(revealPhones ? {
+        reveal_phone_number: true,
+        // webhook_url only when env var is set (async fresh reveals).
+        // Without it, Apollo returns cached phones in the sync response.
+        ...(webhookUrl ? { webhook_url: webhookUrl } : {}),
+      } : {}),
     }));
     const { ok, data, reason } = await apolloCall("/people/bulk_match", { details }, "POST", 30000);
     if (!ok) {
@@ -528,7 +587,10 @@ async function actionApolloBulkEnrich(params) {
         apolloCall("/people/match", {
           linkedin_url: url,
           reveal_personal_emails: true,
-          ...(revealPhones ? { reveal_phone_number: true, webhook_url: webhookUrl } : {}),
+          ...(revealPhones ? {
+            reveal_phone_number: true,
+            ...(webhookUrl ? { webhook_url: webhookUrl } : {}),
+          } : {}),
         }, "POST", 15000)
       ));
       for (const { ok, data } of results) {

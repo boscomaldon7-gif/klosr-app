@@ -25,12 +25,18 @@ export default async function handler(req, res) {
   try {
     const body = await readJsonBody(req);
     const { linkedinUrl } = body || {};
-    // Phone reveal is default-OFF because Apollo's API delivers phones
-    // asynchronously via webhook (not sync response) and we don't have a
-    // webhook endpoint deployed yet. Caller can opt-in with
-    // `revealPhone: true` once a webhook URL is configured via
-    // APOLLO_PHONE_WEBHOOK_URL env var.
-    const revealPhone = body.revealPhone === true && !!process.env.APOLLO_PHONE_WEBHOOK_URL;
+    // Phone reveal is default-ON. Apollo's /people/match returns
+    // previously-revealed (cached) phones synchronously in the response
+    // body when `reveal_phone_number: true` is sent — no webhook required,
+    // no extra credit cost. The webhook is only needed for ASYNC fresh
+    // reveals (paid hot reveals against records that have never been
+    // unlocked). When APOLLO_PHONE_WEBHOOK_URL is set, we additionally
+    // request an async fresh reveal; without it, Apollo just returns what
+    // it already has.
+    // Caller can opt out with `revealPhone: false` if they want to skip
+    // the phone-credit hit entirely (e.g. deep-research path that fetches
+    // phones via a separate find-email call).
+    const revealPhone = body.revealPhone !== false;
 
     if (!linkedinUrl || typeof linkedinUrl !== "string") {
       res.status(400).json({ error: "missing_linkedin_url" });
@@ -53,11 +59,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         linkedin_url: linkedinUrl,
         reveal_personal_emails: true,
-        // Phone reveal only attaches a webhook_url when the env var is set.
-        // Without it, Apollo rejects the request — so keep both off.
+        // Phone reveal: webhook_url is only attached when the env var is
+        // set. Without it, Apollo treats the request as "return cached
+        // phones synchronously" — exactly what we want by default. When
+        // set, Apollo also kicks off an async fresh reveal that POSTs to
+        // the webhook later.
         ...(revealPhone ? {
           reveal_phone_number: true,
-          webhook_url: process.env.APOLLO_PHONE_WEBHOOK_URL,
+          ...(process.env.APOLLO_PHONE_WEBHOOK_URL ? { webhook_url: process.env.APOLLO_PHONE_WEBHOOK_URL } : {}),
         } : {}),
       }),
     });
@@ -168,12 +177,48 @@ export default async function handler(req, res) {
       return 1;
     };
 
+    // Collect from every response shape Apollo uses. Different plans /
+    // endpoints sprinkle phones across different fields; we union them.
     const phoneSources = [];
     if (Array.isArray(person.phone_numbers)) phoneSources.push(...person.phone_numbers);
     if (Array.isArray(person.sanitized_phone_numbers)) phoneSources.push(...person.sanitized_phone_numbers);
-    if (person.contact && Array.isArray(person.contact.phone_numbers)) {
-      phoneSources.push(...person.contact.phone_numbers);
+    if (person.contact && typeof person.contact === "object") {
+      if (Array.isArray(person.contact.phone_numbers)) phoneSources.push(...person.contact.phone_numbers);
+      if (Array.isArray(person.contact.sanitized_phone_numbers)) phoneSources.push(...person.contact.sanitized_phone_numbers);
     }
+    if (person.organization && typeof person.organization === "object") {
+      if (Array.isArray(person.organization.phone_numbers)) {
+        // Tag org-line phones as work_hq if they don't already carry a type.
+        for (const op of person.organization.phone_numbers) {
+          if (op && typeof op === "object") {
+            phoneSources.push({ ...op, type: op.type || "work_hq" });
+          }
+        }
+      }
+    }
+    // Top-level scalar phone string (older Apollo payloads).
+    if (typeof person.phone === "string" && person.phone.trim()) {
+      phoneSources.push({ raw_number: person.phone, sanitized_number: person.phone, type: "other" });
+    }
+    if (typeof data.phone === "string" && data.phone.trim()) {
+      phoneSources.push({ raw_number: data.phone, sanitized_number: data.phone, type: "other" });
+    }
+
+    // Reject Apollo's reveal-denied placeholders. Keep the list aggressive —
+    // a missing phone is much better than a visibly fake one in the UI.
+    const isPlaceholderPhone = (raw, digits) => {
+      if (!digits || digits === "+") return true;
+      if (/(?:unlocked|locked|redacted|hidden|placeholder|n\/a)/i.test(raw)) return true;
+      const onlyDigits = digits.replace(/^\+/, "");
+      if (onlyDigits.length < 7) return true;            // too short to be real
+      if (/^0+$/.test(onlyDigits)) return true;          // all zeros
+      if (/^(\d)\1+$/.test(onlyDigits)) return true;     // single-digit repeat (1111…)
+      if (/^(?:\+?1)?0{6,}$/.test(digits)) return true;  // legacy zero-pad pattern
+      return false;
+    };
+    // E.164-style normalisation for dedupe — strip all non-digits, then
+    // prepend a "+" so "+1 415-555-9876" and "14155559876" collapse to one.
+    const e164 = (digits) => "+" + digits.replace(/^\+/, "").replace(/[^\d]/g, "");
 
     const seenPhones = new Set();
     const phoneList = [];
@@ -182,14 +227,11 @@ export default async function handler(req, res) {
       const raw = String(p.raw_number || p.sanitized_number || "").trim();
       const sanitized = String(p.sanitized_number || p.raw_number || "").trim();
       if (!raw || !sanitized) continue;
-      // Dedupe on digits only.
       const digits = sanitized.replace(/[^\d+]/g, "");
-      if (!digits || digits === "+" || seenPhones.has(digits)) continue;
-      // Filter Apollo's reveal-denied placeholders (they sometimes return
-      // "+1 000-000-0000" or "unlocked_phone" when the reveal failed).
-      if (/^(?:\+?1)?0{6,}$/.test(digits)) continue;
-      if (/unlocked/i.test(raw)) continue;
-      seenPhones.add(digits);
+      if (isPlaceholderPhone(raw, digits)) continue;
+      const key = e164(digits);
+      if (seenPhones.has(key)) continue;
+      seenPhones.add(key);
       phoneList.push({
         number: raw,
         sanitized: digits,
