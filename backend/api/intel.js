@@ -541,31 +541,51 @@ async function actionApolloBulkEnrich(params) {
   }
 
   // Build one bulk_match "detail" per input. Each detail must carry enough
-  // identifying info for Apollo to find the person. URL is most reliable;
-  // email is second-best; first/last + org name is the fallback.
+  // identifying info for Apollo to find the person. Match priority:
+  //   1. Apollo `id` — 100% match rate (it's their own primary key).
+  //      Captured from /mixed_people/api_search on every search result.
+  //   2. linkedin_url — very high match rate.
+  //   3. email — high match rate.
+  //   4. first_name + last_name + organization_name — ~30-50% match rate
+  //      depending on name uniqueness and org spelling. Last resort.
   const buildDetailFromLead = (l) => {
     const detail = {};
-    if (l.linkedinUrl) detail.linkedin_url = l.linkedinUrl;
-    else if (l.email) detail.email = l.email;
-    else {
-      const fn = (l.firstName || "").trim();
-      const ln = (l.lastName  || "").trim();
-      let firstName = fn, lastName = ln;
-      if ((!firstName || !lastName) && l.name) {
-        const parts = String(l.name).trim().split(/\s+/);
-        firstName = firstName || parts[0] || "";
-        lastName  = lastName  || parts.slice(1).join(" ") || "";
-      }
-      if (!firstName && !lastName) return null;
-      detail.first_name = firstName;
-      if (lastName) detail.last_name = lastName;
-      const org = (l.company || l.companyName || "").trim();
-      if (org) detail.organization_name = org;
+    if (l.apolloId) {
+      detail.id = l.apolloId;
+      return detail;
     }
+    if (l.linkedinUrl) {
+      detail.linkedin_url = l.linkedinUrl;
+      return detail;
+    }
+    if (l.email) {
+      detail.email = l.email;
+      return detail;
+    }
+    const fn = (l.firstName || "").trim();
+    const ln = (l.lastName  || "").trim();
+    let firstName = fn, lastName = ln;
+    if ((!firstName || !lastName) && l.name) {
+      const parts = String(l.name).trim().split(/\s+/);
+      firstName = firstName || parts[0] || "";
+      lastName  = lastName  || parts.slice(1).join(" ") || "";
+    }
+    if (!firstName && !lastName) return null;
+    detail.first_name = firstName;
+    if (lastName) detail.last_name = lastName;
+    const org = (l.company || l.companyName || "").trim();
+    if (org) detail.organization_name = org;
     return detail;
   };
 
+  // Top-level apolloIds[] convenience: if the caller passes a flat array
+  // of Apollo person IDs (the most reliable path), wrap each as a tiny
+  // lead so buildDetailFromLead handles it the same way.
+  const apolloIds = Array.isArray(params.apolloIds) ? params.apolloIds.slice(0, 25).filter(Boolean) : [];
+  const idLeads = apolloIds.map((id) => ({ apolloId: String(id) }));
+
   const inputDetails = [
+    ...idLeads.map(buildDetailFromLead).filter(Boolean),
     ...urls.map((u) => ({ linkedin_url: u })),
     ...leads.map(buildDetailFromLead).filter(Boolean),
   ];
