@@ -524,8 +524,54 @@ async function actionApolloPeopleSearch(params) {
 // larger lists and merge results. This is the "turn warm-leads list into
 // a CRM" feature — every card gains email + phone with one call.
 async function actionApolloBulkEnrich(params) {
+  // Two input modes:
+  //   1) linkedinUrls: ["https://linkedin.com/in/..."]    → URL-based bulk_match
+  //   2) leads: [{firstName, lastName, name, company, email}]
+  //        → bulk_match using first_name + last_name + organization_name
+  //          (or email if available). Used by the "Reveal URLs" button on
+  //          Apollo people-search results, where the search response gives
+  //          us names + companies but NO LinkedIn URLs (lower-tier plans).
+  // Both modes hit the same /people/bulk_match endpoint with the same
+  // chunking + fallback behaviour.
   const urls = Array.isArray(params.linkedinUrls) ? params.linkedinUrls.slice(0, 25) : [];
-  if (urls.length === 0) return { matches: [], reason: "missing_urls" };
+  const leads = Array.isArray(params.leads) ? params.leads.slice(0, 25) : [];
+
+  if (urls.length === 0 && leads.length === 0) {
+    return { matches: [], reason: "missing_urls" };
+  }
+
+  // Build one bulk_match "detail" per input. Each detail must carry enough
+  // identifying info for Apollo to find the person. URL is most reliable;
+  // email is second-best; first/last + org name is the fallback.
+  const buildDetailFromLead = (l) => {
+    const detail = {};
+    if (l.linkedinUrl) detail.linkedin_url = l.linkedinUrl;
+    else if (l.email) detail.email = l.email;
+    else {
+      const fn = (l.firstName || "").trim();
+      const ln = (l.lastName  || "").trim();
+      let firstName = fn, lastName = ln;
+      if ((!firstName || !lastName) && l.name) {
+        const parts = String(l.name).trim().split(/\s+/);
+        firstName = firstName || parts[0] || "";
+        lastName  = lastName  || parts.slice(1).join(" ") || "";
+      }
+      if (!firstName && !lastName) return null;
+      detail.first_name = firstName;
+      if (lastName) detail.last_name = lastName;
+      const org = (l.company || l.companyName || "").trim();
+      if (org) detail.organization_name = org;
+    }
+    return detail;
+  };
+
+  const inputDetails = [
+    ...urls.map((u) => ({ linkedin_url: u })),
+    ...leads.map(buildDetailFromLead).filter(Boolean),
+  ];
+  if (inputDetails.length === 0) {
+    return { matches: [], reason: "missing_identifiers" };
+  }
 
   // Phone reveal is default-ON. Apollo's bulk_match returns
   // previously-revealed (cached) phones synchronously when
@@ -539,10 +585,20 @@ async function actionApolloBulkEnrich(params) {
   const revealPhones = params.revealPhones !== false;
   const webhookUrl = process.env.APOLLO_PHONE_WEBHOOK_URL || "";
 
+  // Augment each detail with the reveal flags before sending.
+  const augment = (detail) => ({
+    ...detail,
+    reveal_personal_emails: true,
+    ...(revealPhones ? {
+      reveal_phone_number: true,
+      ...(webhookUrl ? { webhook_url: webhookUrl } : {}),
+    } : {}),
+  });
+
   // Try the bulk endpoint first (Pro+ plans). If it returns plan-required,
   // fall back to parallel single /people/match calls (available on Basic).
   const chunks = [];
-  for (let i = 0; i < urls.length; i += 10) chunks.push(urls.slice(i, i + 10));
+  for (let i = 0; i < inputDetails.length; i += 10) chunks.push(inputDetails.slice(i, i + 10));
 
   const allMatches = [];
   let bulkAvailable = true;
@@ -550,16 +606,7 @@ async function actionApolloBulkEnrich(params) {
 
   for (const chunk of chunks) {
     if (!bulkAvailable) break;
-    const details = chunk.map(u => ({
-      linkedin_url: u,
-      reveal_personal_emails: true,
-      ...(revealPhones ? {
-        reveal_phone_number: true,
-        // webhook_url only when env var is set (async fresh reveals).
-        // Without it, Apollo returns cached phones in the sync response.
-        ...(webhookUrl ? { webhook_url: webhookUrl } : {}),
-      } : {}),
-    }));
+    const details = chunk.map(augment);
     const { ok, data, reason } = await apolloCall("/people/bulk_match", { details }, "POST", 30000);
     if (!ok) {
       lastReason = reason;
@@ -581,17 +628,10 @@ async function actionApolloBulkEnrich(params) {
   // a small concurrency cap so we don't burn through credits on a bad list.
   if (!bulkAvailable && allMatches.length === 0) {
     const CONCURRENCY = 4;
-    for (let i = 0; i < urls.length; i += CONCURRENCY) {
-      const batch = urls.slice(i, i + CONCURRENCY);
-      const results = await Promise.all(batch.map(url =>
-        apolloCall("/people/match", {
-          linkedin_url: url,
-          reveal_personal_emails: true,
-          ...(revealPhones ? {
-            reveal_phone_number: true,
-            ...(webhookUrl ? { webhook_url: webhookUrl } : {}),
-          } : {}),
-        }, "POST", 15000)
+    for (let i = 0; i < inputDetails.length; i += CONCURRENCY) {
+      const batch = inputDetails.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(batch.map((detail) =>
+        apolloCall("/people/match", augment(detail), "POST", 15000)
       ));
       for (const { ok, data } of results) {
         if (!ok) continue;
