@@ -1029,16 +1029,35 @@ async function actionAdminStats(params) {
 
   // Pull all dashboard data in parallel. Each helper fails soft (returns
   // empty/null) so a partial outage still renders something useful.
+  // Events the dashboard surfaces as a counter grid. Anything else logged
+  // via actionLogEvent still goes into the recent-events stream and the
+  // user's event count, just not the curated grid. Keep this list ordered
+  // by funnel stage so the dashboard reads top-to-bottom like a journey:
+  //   onboarding → outbound → prep → coach → follow-up → meta
   const featuresToTrack = [
-    "install", "identity_set",
-    "sidebar_opened",
-    "brief_generated", "dossier_generated",
-    "warm_leads_search", "warm_lead_drafted",
+    // Onboarding
+    "install", "identity_set", "sidebar_opened",
+    // Outbound (v4.10 funnel)
+    "lead_list_created", "lead_list_imported",
+    "apollo_search_run", "apollo_reveal_urls_clicked",
+    "power_hour_started", "power_hour_dm_sent", "power_hour_completed",
+    "persona_changed", "elite_mode_toggled",
+    // Outreach actions (any-context)
+    "email_drafted", "sequence_generated", "dm_drafted", "connection_drafted",
+    // Prep
+    "brief_generated", "dossier_generated", "company_intel_opened",
+    "calendar_invite_detected", "prep_notification_clicked",
+    // Coach
     "live_assist_started", "live_assist_ended",
-    "email_drafted", "sequence_generated",
-    "company_intel_opened", "chat_message_sent",
-    "daily_close_opened", "daily_close_action_clicked",
+    // Follow-up
+    "followup_drafted", "followup_autofilled",
+    // Pipeline / meta
+    "meeting_booked", "call_coached", "deal_won", "deal_lost",
     "pipeline_revive_clicked", "pipeline_multithread_clicked",
+    "chat_message_sent",
+    // Legacy (kept so historical data still renders)
+    "warm_leads_search", "warm_lead_drafted",
+    "daily_close_opened", "daily_close_action_clicked",
   ];
 
   const [overview, features7d, features30d, users, recentEvents] = await Promise.all([

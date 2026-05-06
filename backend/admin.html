@@ -3,79 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Klosr Admin</title>
+  <title>Klosr Admin · Live</title>
   <style>
+    /* ════════════════════════════════════════════════════════════════
+     * Klosr admin dashboard — live, single-file, no build, no deps.
+     * Polls /api/intel admin-stats every 8s. Animates new events in.
+     * Designed for solo founder use (one screen, scannable in 5 sec).
+     * ════════════════════════════════════════════════════════════════ */
+
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: #0A0A0B; color: #F4F4F5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    html, body { margin: 0; padding: 0; background: #0A0A0B; color: #F4F4F5;
+                 font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+                 -webkit-font-smoothing: antialiased; }
     body { min-height: 100vh; }
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 30px 24px 60px; }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
 
-    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    a { color: #FFD60A; text-decoration: none; }
+    button { font-family: inherit; }
+
+    /* ── Top bar ──────────────────────────────────────────────────── */
+    header { display: flex; align-items: center; justify-content: space-between;
+             margin-bottom: 24px; flex-wrap: wrap; gap: 14px; }
     h1 { font-size: 22px; margin: 0; color: #FFD60A; letter-spacing: -0.01em; }
-    h1 small { color: rgba(244,244,245,0.45); font-size: 12px; font-weight: 400; margin-left: 12px; letter-spacing: 0.04em; }
+    h1 .sub { color: rgba(244,244,245,0.45); font-size: 12px; font-weight: 400;
+              margin-left: 12px; letter-spacing: 0.04em; }
 
-    .btn { background: rgba(255,214,10,0.12); border: 1px solid rgba(255,214,10,0.4); color: #FFD60A;
-           font-family: inherit; font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 7px; cursor: pointer; transition: filter 120ms; }
+    .live-pill { display: inline-flex; align-items: center; gap: 6px;
+                 padding: 4px 10px; background: rgba(110, 231, 183, 0.10);
+                 border: 1px solid rgba(110, 231, 183, 0.40); border-radius: 999px;
+                 font-size: 11px; font-weight: 700; color: #6EE7B7;
+                 letter-spacing: 0.04em; text-transform: uppercase; }
+    .live-pill.paused { background: rgba(244,244,245,0.05); border-color: rgba(244,244,245,0.15);
+                        color: rgba(244,244,245,0.55); }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #34D399;
+                animation: live-pulse 1.6s ease-in-out infinite; }
+    .live-pill.paused .live-dot { background: rgba(244,244,245,0.40); animation: none; }
+    @keyframes live-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+      50%      { opacity: 0.55; box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+    }
+
+    .top-actions { display: flex; gap: 6px; }
+    .btn { background: rgba(255,214,10,0.12); border: 1px solid rgba(255,214,10,0.4);
+           color: #FFD60A; font-size: 12px; font-weight: 600; padding: 7px 13px;
+           border-radius: 7px; cursor: pointer; transition: filter 120ms; }
     .btn:hover { filter: brightness(1.15); }
     .btn:disabled { opacity: 0.5; cursor: wait; }
+    .btn-ghost { background: transparent; color: rgba(244,244,245,0.55);
+                 border-color: rgba(244,244,245,0.15); }
+    .btn-ghost:hover { color: #fff; }
 
-    /* Login screen */
-    .login { max-width: 340px; margin: 120px auto; padding: 28px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+    /* ── Login screen ─────────────────────────────────────────────── */
+    .login { max-width: 340px; margin: 120px auto; padding: 28px;
+             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+             border-radius: 12px; }
     .login h2 { color: #FFD60A; margin: 0 0 16px; font-size: 18px; }
-    .login input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; color: #F4F4F5; font-family: inherit; font-size: 14px; }
+    .login input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.3);
+                   border: 1px solid rgba(255,255,255,0.12); border-radius: 7px;
+                   color: #F4F4F5; font-family: inherit; font-size: 14px; }
     .login input:focus { outline: none; border-color: #FFD60A; }
     .login .btn { width: 100%; margin-top: 12px; padding: 10px; font-size: 14px; }
     .login-error { color: #F87171; font-size: 12px; margin-top: 8px; }
 
-    /* Stat cards */
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-    .stat { padding: 16px 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; }
-    .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244,244,245,0.55); margin-bottom: 6px; }
-    .stat-value { font-size: 28px; font-weight: 800; color: #FFD60A; font-variant-numeric: tabular-nums; line-height: 1.1; }
-    .stat-sub { font-size: 11px; color: rgba(244,244,245,0.45); margin-top: 4px; }
+    /* ── Stat cards ───────────────────────────────────────────────── */
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+             margin-bottom: 22px; }
+    .stat { padding: 14px 16px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+            transition: border-color 200ms, transform 200ms; }
+    .stat.flash { border-color: rgba(255,214,10,0.55); transform: translateY(-1px); }
+    .stat-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+                  text-transform: uppercase; color: rgba(244,244,245,0.55);
+                  margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 800; color: #FFD60A;
+                  font-variant-numeric: tabular-nums; line-height: 1.05; }
+    .stat-sub { font-size: 10.5px; color: rgba(244,244,245,0.45); margin-top: 4px; }
+    .stat-now { background: rgba(110, 231, 183, 0.05); border-color: rgba(110, 231, 183, 0.25); }
+    .stat-now .stat-value { color: #6EE7B7; }
 
-    section { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
-    section h2 { font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(244,244,245,0.70); margin: 0; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15); }
+    /* ── Section frames ───────────────────────────────────────────── */
+    section { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+              border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+    section h2 { font-size: 12.5px; font-weight: 800; letter-spacing: 0.06em;
+                 text-transform: uppercase; color: rgba(244,244,245,0.70);
+                 margin: 0; padding: 11px 18px; border-bottom: 1px solid rgba(255,255,255,0.06);
+                 background: rgba(0,0,0,0.15);
+                 display: flex; justify-content: space-between; align-items: center; }
+    section h2 .h-meta { font-weight: 400; opacity: 0.55; text-transform: none; letter-spacing: 0; font-size: 11px; }
 
-    /* Features grid */
-    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; padding: 16px 18px; }
-    .feature { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px; }
-    .feature-name { color: rgba(244,244,245,0.80); font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Menlo, monospace; }
+    /* ── Funnel ──────────────────────────────────────────────────── */
+    .funnel { display: grid; grid-template-columns: repeat(5, 1fr); padding: 16px 18px; gap: 8px; }
+    .funnel-step { padding: 14px 14px; background: rgba(0,0,0,0.20);
+                   border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+                   position: relative; }
+    .funnel-step::after { content: "→"; position: absolute; right: -14px; top: 50%;
+                          transform: translateY(-50%); color: rgba(255,214,10,0.45);
+                          font-size: 16px; font-weight: 700; }
+    .funnel-step:last-child::after { display: none; }
+    .funnel-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+                    text-transform: uppercase; color: rgba(244,244,245,0.55); }
+    .funnel-icon { font-size: 14px; margin-right: 4px; }
+    .funnel-count { font-size: 22px; font-weight: 800; color: #FFD60A;
+                    font-variant-numeric: tabular-nums; margin-top: 4px; line-height: 1.05; }
+    .funnel-conv { font-size: 10.5px; color: rgba(244,244,245,0.55); margin-top: 4px;
+                   font-variant-numeric: tabular-nums; }
+    .funnel-conv.high { color: #6EE7B7; }
+    .funnel-conv.low  { color: #F87171; }
+
+    /* ── 30-day line chart ───────────────────────────────────────── */
+    .chart-box { padding: 16px 18px; }
+    .chart-svg { width: 100%; height: 130px; display: block; }
+    .chart-axis { font-size: 10px; fill: rgba(244,244,245,0.35); font-variant-numeric: tabular-nums; }
+    .chart-line { fill: none; stroke: #FFD60A; stroke-width: 2; }
+    .chart-area { fill: url(#grad); opacity: 0.30; }
+    .chart-dot { fill: #FFD60A; }
+    .chart-today { fill: #FFD60A; r: 4; filter: drop-shadow(0 0 6px rgba(255, 214, 10, 0.7)); }
+
+    /* ── Feature usage grid ──────────────────────────────────────── */
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 6px; padding: 12px 18px; }
+    .feature { display: flex; align-items: center; justify-content: space-between;
+               padding: 7px 11px; background: rgba(255,255,255,0.03); border-radius: 6px;
+               font-size: 11.5px; transition: background 120ms; }
+    .feature:hover { background: rgba(255,214,10,0.06); }
+    .feature.zero { opacity: 0.42; }
+    .feature-name { color: rgba(244,244,245,0.80);
+                    font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Menlo, monospace;
+                    font-size: 11px; }
     .feature-count { font-weight: 700; color: #FFD60A; font-variant-numeric: tabular-nums; }
+    .feature-count .stale { color: rgba(244,244,245,0.40); font-weight: 400; margin-left: 5px; }
 
-    /* Daily activity sparkline */
-    .activity-strip { display: flex; gap: 4px; align-items: flex-end; padding: 16px 18px; height: 110px; }
-    .activity-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
-    .activity-bar { width: 100%; background: rgba(255,214,10,0.25); border-radius: 3px 3px 0 0; transition: background 120ms; min-height: 3px; }
-    .activity-bar:hover { background: #FFD60A; }
-    .activity-bar[data-today="1"] { background: #FFD60A; box-shadow: 0 0 10px rgba(255,214,10,0.45); }
-    .activity-label { font-size: 10px; color: rgba(244,244,245,0.40); text-align: center; margin-top: 6px; }
-
-    /* Users table */
+    /* ── Users table ─────────────────────────────────────────────── */
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     th, td { padding: 8px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    th { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244,244,245,0.50); background: rgba(0,0,0,0.15); position: sticky; top: 0; }
-    tbody tr:hover { background: rgba(255,214,10,0.04); }
-    .mono { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; color: rgba(244,244,245,0.55); }
-    .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 999px; background: rgba(147,197,253,0.12); color: #BFDBFE; font-weight: 600; }
+    th { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+         color: rgba(244,244,245,0.50); background: rgba(0,0,0,0.15);
+         position: sticky; top: 0; }
+    tbody tr { cursor: pointer; transition: background 120ms; }
+    tbody tr:hover { background: rgba(255,214,10,0.05); }
+    .mono { font-family: ui-monospace, monospace; font-size: 11px; color: rgba(244,244,245,0.55); }
+    .tag { display: inline-block; font-size: 9.5px; padding: 2px 7px; border-radius: 999px;
+           background: rgba(147,197,253,0.12); color: #BFDBFE; font-weight: 700;
+           letter-spacing: 0.04em; text-transform: uppercase; }
     .tag-hot { background: rgba(52,211,153,0.14); color: #6EE7B7; }
+    .tag-now { background: rgba(110, 231, 183, 0.20); color: #6EE7B7;
+               animation: tag-pulse 1.6s ease-in-out infinite; }
+    @keyframes tag-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.50); }
+      50%      { box-shadow: 0 0 0 4px rgba(52, 211, 153, 0); }
+    }
 
-    /* Event log */
-    .events { padding: 6px 0; max-height: 440px; overflow-y: auto; }
-    .event-row { display: grid; grid-template-columns: 80px 140px 1fr 160px; gap: 12px; padding: 6px 18px; font-size: 11.5px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    /* ── Live event stream ───────────────────────────────────────── */
+    .controls { padding: 8px 18px; display: flex; gap: 6px; flex-wrap: wrap;
+                border-bottom: 1px solid rgba(255,255,255,0.04);
+                background: rgba(0,0,0,0.10); }
+    .filter-pill { padding: 4px 10px; background: rgba(255,255,255,0.04);
+                   border: 1px solid rgba(255,255,255,0.10); border-radius: 999px;
+                   color: rgba(244,244,245,0.70); font-size: 11px; font-weight: 600;
+                   cursor: pointer; transition: all 120ms; }
+    .filter-pill:hover { color: #FFD60A; border-color: rgba(255,214,10,0.45); }
+    .filter-pill.active { background: rgba(255,214,10,0.12); color: #FFD60A;
+                          border-color: rgba(255,214,10,0.55); }
+
+    .events { padding: 4px 0; max-height: 480px; overflow-y: auto; }
+    .event-row { display: grid; grid-template-columns: 70px 200px 1fr 180px;
+                 gap: 12px; padding: 7px 18px; font-size: 11.5px;
+                 border-bottom: 1px solid rgba(255,255,255,0.03);
+                 transition: background 120ms; }
+    .event-row.fresh { background: rgba(255,214,10,0.07);
+                       animation: event-flash 1.4s ease-out; }
+    @keyframes event-flash {
+      0%   { background: rgba(255,214,10,0.20); }
+      100% { background: rgba(0,0,0,0); }
+    }
     .event-row:hover { background: rgba(255,255,255,0.02); }
-    .event-time { color: rgba(244,244,245,0.45); font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; }
-    .event-name { font-weight: 700; color: #FFD60A; font-family: ui-monospace, monospace; }
-    .event-meta { color: rgba(244,244,245,0.65); word-break: break-word; }
-    .event-user { color: rgba(244,244,245,0.45); font-family: ui-monospace, monospace; text-align: right; }
+    .event-time { color: rgba(244,244,245,0.45); font-variant-numeric: tabular-nums;
+                  font-family: ui-monospace, monospace; }
+    .event-name { font-weight: 700; color: #FFD60A; font-family: ui-monospace, monospace;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-meta { color: rgba(244,244,245,0.65); word-break: break-word;
+                  font-family: ui-monospace, monospace; font-size: 10.5px;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-user { color: rgba(244,244,245,0.55); font-family: ui-monospace, monospace;
+                  text-align: right; cursor: pointer; }
+    .event-user:hover { color: #FFD60A; }
 
-    .empty { text-align: center; padding: 40px; color: rgba(244,244,245,0.40); font-style: italic; font-size: 12px; }
-    .error { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.35); color: #FCA5A5; padding: 14px 18px; border-radius: 10px; font-size: 13px; }
+    /* ── User drill-down modal ───────────────────────────────────── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(10,10,11,0.75);
+                backdrop-filter: blur(4px); z-index: 100; display: flex;
+                align-items: center; justify-content: center; padding: 20px;
+                animation: fade-in 0.18s ease; }
+    .modal { background: #0F0F12; border: 1px solid rgba(255,255,255,0.10);
+             border-radius: 14px; max-width: 720px; width: 100%; max-height: 85vh;
+             display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+    .modal-head { display: flex; justify-content: space-between; align-items: flex-start;
+                  padding: 18px 22px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-head h3 { margin: 0 0 4px; font-size: 17px; color: #FFD60A; letter-spacing: -0.01em; }
+    .modal-head .modal-sub { font-size: 12px; color: rgba(244,244,245,0.55); }
+    .modal-close { background: transparent; border: none; color: rgba(244,244,245,0.55);
+                   font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1; }
+    .modal-close:hover { color: #fff; }
+    .modal-body { padding: 16px 22px; overflow-y: auto; }
+    .modal-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px;
+                  font-size: 12.5px; margin-bottom: 18px; }
+    .modal-grid .k { color: rgba(244,244,245,0.50); font-weight: 600;
+                     letter-spacing: 0.04em; text-transform: uppercase; font-size: 10.5px;
+                     padding-top: 2px; }
+    .modal-grid .v { color: #F4F4F5; word-break: break-word; }
 
+    .timeline-h { font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+                  text-transform: uppercase; color: rgba(244,244,245,0.50);
+                  margin: 0 0 8px; }
+    .timeline { font-size: 11.5px; }
+    .timeline-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px;
+                    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .timeline-time { color: rgba(244,244,245,0.45); font-family: ui-monospace, monospace;
+                     font-variant-numeric: tabular-nums; }
+    .timeline-event { color: #FFD60A; font-family: ui-monospace, monospace; font-weight: 600; }
+    .timeline-event .meta { color: rgba(244,244,245,0.55); font-weight: 400; margin-left: 6px; font-size: 10.5px; }
+
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+    .empty { text-align: center; padding: 40px; color: rgba(244,244,245,0.40);
+             font-style: italic; font-size: 12px; }
+    .error { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.35);
+             color: #FCA5A5; padding: 14px 18px; border-radius: 10px; font-size: 13px; }
+
+    @media (max-width: 1000px) {
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .funnel { grid-template-columns: repeat(3, 1fr); }
+      .funnel-step::after { display: none; }
+    }
     @media (max-width: 700px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
+      .funnel { grid-template-columns: 1fr 1fr; }
       .event-row { grid-template-columns: 60px 1fr; }
       .event-row .event-user, .event-row .event-meta { display: none; }
+      th.hide-sm, td.hide-sm { display: none; }
     }
   </style>
 </head>
@@ -84,32 +248,42 @@
 
   <script>
     // ─────────── Endpoint configuration ───────────
-    // Admin dashboard calls the same /api/intel dispatcher as the extension,
-    // with action: "admin-stats" + password. Password is kept in sessionStorage
-    // (cleared when the browser tab closes) — not localStorage, for safety.
+    // Same /api/intel dispatcher the extension uses. action: "admin-stats"
+    // gated by ADMIN_PASSWORD env var. Password lives in sessionStorage so
+    // it disappears when the tab closes — no localStorage persistence.
     const INTEL_URL = "/api/intel";
     const PW_KEY = "klosr_admin_pw";
+    const POLL_INTERVAL_MS = 8000;          // 8s ≈ live without hammering Upstash
+    const ACTIVE_NOW_WINDOW_MS = 5 * 60_000; // events in last 5 min = "active right now"
 
+    // ─────────── Tiny utils ───────────
     function esc(s) {
       return String(s == null ? "" : s)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
-
     function fmtRelative(ms) {
       if (!ms) return "—";
       const sec = (Date.now() - Number(ms)) / 1000;
-      if (sec < 60) return Math.round(sec) + "s ago";
-      if (sec < 3600) return Math.round(sec / 60) + "m ago";
+      if (sec < 60)    return Math.round(sec) + "s ago";
+      if (sec < 3600)  return Math.round(sec / 60) + "m ago";
       if (sec < 86400) return Math.round(sec / 3600) + "h ago";
       return Math.round(sec / 86400) + "d ago";
     }
-
     function fmtTime(ts) {
       const d = new Date(Number(ts) || 0);
       const hh = String(d.getHours()).padStart(2, "0");
       const mm = String(d.getMinutes()).padStart(2, "0");
-      return hh + ":" + mm;
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      return `${hh}:${mm}:${ss}`;
+    }
+    function fmtNum(n) {
+      n = Number(n) || 0;
+      return n.toLocaleString();
+    }
+    function pct(num, denom) {
+      if (!denom || denom === 0) return "—";
+      return Math.round((num / denom) * 100) + "%";
     }
 
     async function fetchStats(pw) {
@@ -122,10 +296,26 @@
       return res.json();
     }
 
+    // ─────────── State ───────────
+    // Closure-scoped state for the live loop. Keeps track of:
+    //  - which event IDs we've already shown (so re-renders don't re-flash)
+    //  - the active filter pill
+    //  - whether polling is paused (user clicked Pause)
+    //  - last data snapshot (for stat-flash compare on diff)
+    const state = {
+      seenEventKeys: new Set(),
+      eventFilter: "all",          // "all" | event name
+      isPaused: false,
+      pollTimer: null,
+      lastData: null,
+      currentModalUser: null,
+    };
+
+    // ─────────── Login ───────────
     function renderLogin(errorMsg) {
       document.getElementById("app").innerHTML = `
         <div class="login">
-          <h2>Klosr Admin</h2>
+          <h2>Klosr Admin · Live</h2>
           <form id="login-form">
             <input type="password" id="pw" placeholder="Admin password" autofocus />
             <button class="btn" type="submit">Enter</button>
@@ -139,7 +329,7 @@
         const data = await fetchStats(pw).catch(() => ({ ok: false, reason: "network" }));
         if (data && data.ok) {
           sessionStorage.setItem(PW_KEY, pw);
-          renderDashboard(data);
+          startLive(data);
         } else {
           renderLogin(
             data?.reason === "unauthorized" ? "Wrong password."
@@ -150,170 +340,450 @@
       });
     }
 
-    function renderDashboard(data) {
+    // ─────────── Live loop ───────────
+    function startLive(initialData) {
+      state.lastData = initialData;
+      renderDashboard(initialData);
+      schedulePoll();
+    }
+
+    function schedulePoll() {
+      if (state.pollTimer) clearTimeout(state.pollTimer);
+      if (state.isPaused) return;
+      state.pollTimer = setTimeout(async () => {
+        const pw = sessionStorage.getItem(PW_KEY);
+        if (!pw) return;
+        const fresh = await fetchStats(pw).catch(() => null);
+        if (fresh && fresh.ok) {
+          state.lastData = fresh;
+          renderDashboard(fresh, /* isLiveTick */ true);
+        }
+        schedulePoll();
+      }, POLL_INTERVAL_MS);
+    }
+
+    // ─────────── Build derived metrics ───────────
+    // Funnel = the 4-step sales motion. Event names match what the extension
+    // logs (or will log once you wire telemetry into Power Hour / Calendar /
+    // Coach / Follow-up). Each stage falls back gracefully when the event
+    // name isn't seen yet — shows 0 instead of breaking.
+    function buildFunnel(features7d) {
+      const f = features7d || {};
+      const dms = (f.power_hour_dm_sent || 0) + (f.dm_drafted || 0) + (f.connection_drafted || 0);
+      const meetings = f.meeting_booked || f.calendar_invite_detected || 0;
+      const calls    = f.call_coached || f.live_assist_started || 0;
+      const followups = f.followup_drafted || f.followup_autofilled || 0;
+      const wins      = f.deal_won || 0;
+      return [
+        { icon: "📤", label: "Outbound",   sub: "DMs sent",      count: dms,       prev: null },
+        { icon: "📅", label: "Meeting",    sub: "Booked",        count: meetings,  prev: dms },
+        { icon: "🎙️", label: "Coached",    sub: "Live call",     count: calls,     prev: meetings },
+        { icon: "📨", label: "Follow-up",  sub: "Sent",          count: followups, prev: calls },
+        { icon: "💰", label: "Closed",     sub: "Deals won",     count: wins,      prev: followups },
+      ];
+    }
+
+    function activeNow(events) {
+      const cutoff = Date.now() - ACTIVE_NOW_WINDOW_MS;
+      const ids = new Set();
+      for (const e of (events || [])) {
+        if (Number(e.ts) >= cutoff && e.installId) ids.add(e.installId);
+      }
+      return ids.size;
+    }
+
+    function eventKey(e) {
+      // Stable key for de-duping the live stream. Composite because Redis
+      // doesn't return its own list IDs and timestamps can collide on bursts.
+      return `${e.ts}|${e.installId}|${e.event}`;
+    }
+
+    // ─────────── Render ───────────
+    function renderDashboard(data, isLiveTick) {
       const o = data.overview || {};
       const f7 = data.features7d || {};
       const f30 = data.features30d || {};
       const users = data.users || [];
       const events = data.recentEvents || [];
 
-      // Daily activity bars (reverse so oldest → newest)
-      const daily = [...(o.dailyActive || [])].reverse();
-      const maxDaily = Math.max(1, ...daily.map(d => d.count));
-      const barsHtml = daily.map((d, i) => {
-        // Scale: max bar height ~80px of the 110px strip (labels take ~20px,
-        // padding takes the rest). Bars with count>0 get at least 10px so
-        // they're actually visible; count=0 gets a faint 3px floor bar.
-        const pct = maxDaily > 0 ? (d.count / maxDaily) : 0;
-        const h = d.count > 0 ? Math.max(10, Math.round(pct * 80)) : 3;
-        const isToday = i === daily.length - 1;
-        const dayLabel = d.date.slice(5);
-        return `<div class="activity-col">
-          <div class="activity-bar" style="height:${h}px" data-today="${isToday ? 1 : 0}" title="${d.date}: ${d.count}"></div>
-          <div class="activity-label">${dayLabel}</div>
-        </div>`;
-      }).join("");
+      const funnelSteps = buildFunnel(f7);
+      const nowActive = activeNow(events);
 
-      // Feature usage rows — sort by 7d count desc
-      const featureOrder = Object.keys(f7).sort((a, b) => (f7[b] || 0) - (f7[a] || 0));
-      const featuresHtml = featureOrder.map(k => `
-        <div class="feature">
-          <span class="feature-name">${esc(k)}</span>
-          <span class="feature-count">${f7[k] || 0}<span style="opacity:0.4; font-weight:400; margin-left:5px">/ ${f30[k] || 0}</span></span>
-        </div>
-      `).join("");
-
-      // Users — sort by eventCount desc
-      const userRows = users
-        .filter(u => Number(u.eventCount) > 0)
-        .sort((a, b) => Number(b.eventCount) - Number(a.eventCount))
-        .map((u, i) => {
-          const isRecent = u.lastSeen && (Date.now() - Number(u.lastSeen)) < 86400000;
-          const identity = u.yourName || u.email || u.companyName
-            ? `<strong>${esc(u.yourName || u.email || "")}</strong>${u.companyName ? ` <span style="color:rgba(244,244,245,0.55)">· ${esc(u.companyName)}</span>` : ""}`
-            : `<span class="mono">${esc(u.installId).slice(0, 12)}…</span>`;
-          const icp = u.icp ? esc(u.icp).slice(0, 100) + (u.icp.length > 100 ? "…" : "") : "—";
-          return `
-            <tr>
-              <td style="color:rgba(244,244,245,0.45);font-weight:700">${i + 1}</td>
-              <td>${identity}</td>
-              <td style="color:rgba(244,244,245,0.70)">${esc(u.yourRole || "")}</td>
-              <td style="color:rgba(244,244,245,0.55);font-size:11px">${esc(icp)}</td>
-              <td style="font-weight:700;color:#FFD60A">${u.eventCount || 0}</td>
-              <td>${fmtRelative(u.lastSeen)} ${isRecent ? '<span class="tag tag-hot">active</span>' : ''}</td>
-              <td style="color:rgba(244,244,245,0.55)">${esc(u.lastEvent || "")}</td>
-            </tr>
-          `;
-        })
-        .join("");
-
-      // Events log — already newest-first from Redis LRANGE
-      const eventsHtml = events.slice(0, 100).map(e => {
-        const user = users.find(u => u.installId === e.installId);
-        const identity = user?.yourName || user?.email || (e.installId || "").slice(0, 10) + "…";
-        const metaStr = e.metadata && Object.keys(e.metadata).length
-          ? Object.entries(e.metadata).slice(0, 4).map(([k, v]) => `${k}=${typeof v === "string" ? v.slice(0, 40) : v}`).join("  ")
-          : "";
-        return `
-          <div class="event-row">
-            <div class="event-time">${fmtTime(e.ts)}</div>
-            <div class="event-name">${esc(e.event)}</div>
-            <div class="event-meta">${esc(metaStr)}</div>
-            <div class="event-user">${esc(identity)}</div>
-          </div>
-        `;
-      }).join("");
+      // Daily activity — backend only returns 7 days, but we show a 30-day
+      // sparkline by padding with zeros. When backend ships 30 we'll just
+      // get the real data; no client change needed.
+      const daily = [...(o.dailyActive || [])].slice(-30);
 
       document.getElementById("app").innerHTML = `
         <div class="wrap">
           <header>
-            <h1>Klosr Admin <small>· generated ${fmtRelative(new Date(data.generatedAt).getTime())}</small></h1>
-            <div>
-              <button class="btn" id="refresh">⟳ Refresh</button>
-              <button class="btn" id="logout" style="background:transparent;color:rgba(244,244,245,0.55);border-color:rgba(244,244,245,0.15);margin-left:6px">Log out</button>
+            <h1>
+              Klosr Admin
+              <span class="sub">· generated ${fmtRelative(new Date(data.generatedAt).getTime())}</span>
+            </h1>
+            <div class="top-actions">
+              <span class="live-pill ${state.isPaused ? "paused" : ""}" id="live-pill">
+                <span class="live-dot"></span>
+                ${state.isPaused ? "Paused" : "Live"}
+              </span>
+              <button class="btn btn-ghost" id="pause">${state.isPaused ? "Resume" : "Pause"}</button>
+              <button class="btn btn-ghost" id="logout">Log out</button>
             </div>
           </header>
 
           <div class="stats">
-            <div class="stat">
-              <div class="stat-label">Total Users</div>
-              <div class="stat-value">${o.totalUsers || 0}</div>
-              <div class="stat-sub">Unique installs</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">Active Today</div>
-              <div class="stat-value">${o.dau || 0}</div>
-              <div class="stat-sub">DAU</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">Active This Week</div>
-              <div class="stat-value">${o.wau || 0}</div>
-              <div class="stat-sub">Weekly activity (may over-count)</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">Total Events</div>
-              <div class="stat-value">${(o.totalEvents || 0).toLocaleString()}</div>
-              <div class="stat-sub">All-time</div>
-            </div>
+            ${renderStat("Total users",        o.totalUsers || 0,           "Unique installs",         "")}
+            ${renderStat("Active right now",   nowActive,                   "Last 5 min",              "stat-now")}
+            ${renderStat("Active today",       o.dau || 0,                  "DAU",                     "")}
+            ${renderStat("Active this week",   o.wau || 0,                  "WAU",                     "")}
+            ${renderStat("Total events",       fmtNum(o.totalEvents || 0),  "All-time",                "")}
           </div>
 
           <section>
-            <h2>Daily activity (last 7 days)</h2>
-            <div class="activity-strip">${barsHtml || `<div class="empty">No activity yet.</div>`}</div>
-          </section>
-
-          <section>
-            <h2>Feature usage · <span style="font-weight:400;opacity:0.55;text-transform:none;letter-spacing:0">7 days / 30 days</span></h2>
-            <div class="features">
-              ${featuresHtml || `<div class="empty">No events tracked yet.</div>`}
+            <h2>The funnel · last 7 days <span class="h-meta">outbound → prep → coach → follow-up → close</span></h2>
+            <div class="funnel">
+              ${funnelSteps.map((s, i) => `
+                <div class="funnel-step">
+                  <div class="funnel-label"><span class="funnel-icon">${s.icon}</span>${esc(s.label)}</div>
+                  <div class="funnel-count">${fmtNum(s.count)}</div>
+                  <div class="funnel-conv ${convClass(s.count, s.prev)}">${
+                    s.prev != null
+                      ? `${pct(s.count, s.prev)} conv`
+                      : esc(s.sub)
+                  }</div>
+                </div>
+              `).join("")}
             </div>
           </section>
 
           <section>
-            <h2>Users (${users.length})</h2>
-            ${userRows ? `
-              <div style="overflow-x:auto">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>#</th><th>Identity</th><th>Role</th><th>ICP</th><th>Events</th><th>Last seen</th><th>Last action</th>
-                    </tr>
-                  </thead>
-                  <tbody>${userRows}</tbody>
-                </table>
-              </div>
-            ` : `<div class="empty">No users yet.</div>`}
+            <h2>Daily active users <span class="h-meta">last ${daily.length} days</span></h2>
+            <div class="chart-box">${renderLineChart(daily)}</div>
           </section>
 
           <section>
-            <h2>Recent events (${events.length})</h2>
-            <div class="events">
-              ${eventsHtml || `<div class="empty">No events yet.</div>`}
+            <h2>Feature usage <span class="h-meta">7-day · 30-day total</span></h2>
+            <div class="features">${renderFeatures(f7, f30)}</div>
+          </section>
+
+          <section>
+            <h2>Users <span class="h-meta">${users.length} total · click a row for details</span></h2>
+            ${renderUsersTable(users)}
+          </section>
+
+          <section>
+            <h2>Live event stream <span class="h-meta">${events.length} most recent · auto-refreshes every ${POLL_INTERVAL_MS/1000}s</span></h2>
+            <div class="controls" id="event-filters">
+              ${renderEventFilters(events)}
             </div>
+            <div class="events" id="events-list">${renderEvents(events, users, isLiveTick)}</div>
           </section>
         </div>
       `;
 
-      document.getElementById("refresh").addEventListener("click", async () => {
-        const btn = document.getElementById("refresh");
-        btn.disabled = true; btn.textContent = "Loading...";
-        const pw = sessionStorage.getItem(PW_KEY);
-        const fresh = await fetchStats(pw).catch(() => null);
-        if (fresh && fresh.ok) renderDashboard(fresh);
-        else { btn.disabled = false; btn.textContent = "⟳ Refresh"; }
-      });
+      // Wire interactions
+      document.getElementById("pause").addEventListener("click", togglePause);
       document.getElementById("logout").addEventListener("click", () => {
         sessionStorage.removeItem(PW_KEY);
+        if (state.pollTimer) clearTimeout(state.pollTimer);
+        state.isPaused = true;
         renderLogin();
+      });
+
+      // Filter pills
+      document.querySelectorAll(".filter-pill").forEach((pill) => {
+        pill.addEventListener("click", () => {
+          state.eventFilter = pill.dataset.filter || "all";
+          renderDashboard(state.lastData);
+        });
+      });
+
+      // User row clicks → drill-down modal
+      document.querySelectorAll("[data-user-id]").forEach((row) => {
+        row.addEventListener("click", () => openUserModal(row.dataset.userId, users, events));
       });
     }
 
-    // Boot — try sessionStorage password first.
+    function renderStat(label, value, sub, cls) {
+      return `
+        <div class="stat ${cls || ""}">
+          <div class="stat-label">${esc(label)}</div>
+          <div class="stat-value">${esc(String(value))}</div>
+          <div class="stat-sub">${esc(sub)}</div>
+        </div>
+      `;
+    }
+
+    function convClass(count, prev) {
+      if (prev == null || prev === 0) return "";
+      const ratio = count / prev;
+      if (ratio >= 0.50) return "high";
+      if (ratio < 0.20) return "low";
+      return "";
+    }
+
+    function renderLineChart(daily) {
+      if (!daily.length) return `<div class="empty">No activity yet.</div>`;
+      const W = 1000, H = 130;        // viewBox dimensions; SVG scales to container width
+      const padL = 38, padR = 14, padT = 14, padB = 22;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const max = Math.max(1, ...daily.map(d => d.count));
+
+      const x = (i) => padL + (daily.length === 1 ? innerW / 2 : (i / (daily.length - 1)) * innerW);
+      const y = (v) => padT + innerH - (v / max) * innerH;
+
+      const points = daily.map((d, i) => `${x(i)},${y(d.count)}`).join(" ");
+      const areaPath = `M ${x(0)},${padT + innerH} L ${points.split(" ").join(" L ")} L ${x(daily.length - 1)},${padT + innerH} Z`;
+
+      const yTicks = 4;
+      const yLabels = [];
+      for (let t = 0; t <= yTicks; t++) {
+        const v = Math.round((max * t) / yTicks);
+        yLabels.push(`<text x="${padL - 6}" y="${y(v) + 3}" class="chart-axis" text-anchor="end">${v}</text>`);
+        yLabels.push(`<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,0.04)" />`);
+      }
+
+      // x-axis labels — show first, last, and middle dates
+      const xLabels = [0, Math.floor((daily.length - 1) / 2), daily.length - 1].map((i) => {
+        const label = (daily[i]?.date || "").slice(5); // MM-DD
+        return `<text x="${x(i)}" y="${H - 6}" class="chart-axis" text-anchor="middle">${label}</text>`;
+      }).join("");
+
+      const todayIdx = daily.length - 1;
+      const todayCount = daily[todayIdx]?.count || 0;
+
+      return `
+        <svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#FFD60A" stop-opacity="0.55" />
+              <stop offset="100%" stop-color="#FFD60A" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          ${yLabels.join("")}
+          <path class="chart-area" d="${areaPath}" />
+          <polyline class="chart-line" points="${points}" />
+          <circle class="chart-today" cx="${x(todayIdx)}" cy="${y(todayCount)}" r="4" />
+          <text x="${x(todayIdx)}" y="${y(todayCount) - 8}" class="chart-axis" text-anchor="middle" fill="#FFD60A" font-weight="700">${todayCount}</text>
+          ${xLabels}
+        </svg>
+      `;
+    }
+
+    function renderFeatures(f7, f30) {
+      // Union of every event seen in EITHER window so we don't miss new
+      // events that haven't been added to the curated list yet.
+      const allKeys = new Set([...Object.keys(f7), ...Object.keys(f30)]);
+      const sorted = [...allKeys].sort((a, b) => (f7[b] || 0) - (f7[a] || 0) || (f30[b] || 0) - (f30[a] || 0));
+      if (!sorted.length) return `<div class="empty">No events tracked yet.</div>`;
+      return sorted.map(k => {
+        const c7 = f7[k] || 0;
+        const c30 = f30[k] || 0;
+        return `
+          <div class="feature ${c7 === 0 && c30 === 0 ? "zero" : ""}">
+            <span class="feature-name">${esc(k)}</span>
+            <span class="feature-count">${c7}<span class="stale">/ ${c30}</span></span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderUsersTable(users) {
+      const sorted = users
+        .filter(u => Number(u.eventCount) > 0)
+        .sort((a, b) => Number(b.eventCount) - Number(a.eventCount));
+      if (!sorted.length) return `<div class="empty">No active users yet.</div>`;
+      const rows = sorted.map((u, i) => {
+        const lastSeenMs = Number(u.lastSeen) || 0;
+        const isNow    = lastSeenMs && (Date.now() - lastSeenMs) < ACTIVE_NOW_WINDOW_MS;
+        const isRecent = lastSeenMs && (Date.now() - lastSeenMs) < 86400000;
+        const identity = u.yourName || u.email || u.companyName
+          ? `<strong>${esc(u.yourName || u.email || "—")}</strong>${u.companyName ? ` <span style="color:rgba(244,244,245,0.55)">· ${esc(u.companyName)}</span>` : ""}`
+          : `<span class="mono">${esc(String(u.installId || "")).slice(0, 12)}…</span>`;
+        const icp = u.icp ? esc(String(u.icp).slice(0, 80)) + (u.icp.length > 80 ? "…" : "") : "—";
+        return `
+          <tr data-user-id="${esc(u.installId || "")}">
+            <td style="color:rgba(244,244,245,0.45);font-weight:700">${i + 1}</td>
+            <td>${identity}</td>
+            <td class="hide-sm" style="color:rgba(244,244,245,0.70)">${esc(u.yourRole || "")}</td>
+            <td class="hide-sm" style="color:rgba(244,244,245,0.55);font-size:11px">${esc(icp)}</td>
+            <td style="font-weight:700;color:#FFD60A">${u.eventCount || 0}</td>
+            <td>${fmtRelative(lastSeenMs)} ${isNow ? '<span class="tag tag-now">now</span>' : isRecent ? '<span class="tag tag-hot">today</span>' : ""}</td>
+            <td class="hide-sm" style="color:rgba(244,244,245,0.55)">${esc(u.lastEvent || "")}</td>
+          </tr>
+        `;
+      }).join("");
+      return `
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Identity</th>
+                <th class="hide-sm">Role</th><th class="hide-sm">ICP</th>
+                <th>Events</th><th>Last seen</th>
+                <th class="hide-sm">Last action</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderEventFilters(events) {
+      // Top-N event types in the recent stream get filter pills. "All" first.
+      const counts = {};
+      for (const e of events) counts[e.event] = (counts[e.event] || 0) + 1;
+      const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 8);
+      const pills = [
+        `<button class="filter-pill ${state.eventFilter === "all" ? "active" : ""}" data-filter="all">All <span style="opacity:0.55">${events.length}</span></button>`,
+        ...top.map(name =>
+          `<button class="filter-pill ${state.eventFilter === name ? "active" : ""}" data-filter="${esc(name)}">${esc(name)} <span style="opacity:0.55">${counts[name]}</span></button>`
+        ),
+      ];
+      return pills.join("");
+    }
+
+    function renderEvents(events, users, isLiveTick) {
+      const filter = state.eventFilter;
+      const filtered = filter === "all" ? events : events.filter(e => e.event === filter);
+      if (!filtered.length) return `<div class="empty">No events match this filter.</div>`;
+
+      // Track which events are NEW this tick (for fade-in flash). Only flag
+      // as "fresh" on a live tick — initial render shouldn't flash everything.
+      const freshKeys = new Set();
+      if (isLiveTick) {
+        for (const e of filtered.slice(0, 30)) {
+          const k = eventKey(e);
+          if (!state.seenEventKeys.has(k)) freshKeys.add(k);
+        }
+      }
+      // Update seen set
+      for (const e of filtered) state.seenEventKeys.add(eventKey(e));
+      // Cap the seen set to prevent unbounded growth (~last 500 keys)
+      if (state.seenEventKeys.size > 500) {
+        state.seenEventKeys = new Set(Array.from(state.seenEventKeys).slice(-500));
+      }
+
+      const userById = new Map();
+      for (const u of users) if (u.installId) userById.set(u.installId, u);
+
+      return filtered.slice(0, 100).map(e => {
+        const user = userById.get(e.installId);
+        const identity = user?.yourName || user?.email || (e.installId ? String(e.installId).slice(0, 10) + "…" : "—");
+        const meta = e.metadata && Object.keys(e.metadata).length
+          ? Object.entries(e.metadata).slice(0, 3).map(([k, v]) =>
+              `${k}=${typeof v === "string" ? v.slice(0, 28) : v}`
+            ).join("  ")
+          : "";
+        const k = eventKey(e);
+        const fresh = freshKeys.has(k) ? "fresh" : "";
+        return `
+          <div class="event-row ${fresh}">
+            <div class="event-time">${fmtTime(e.ts)}</div>
+            <div class="event-name">${esc(e.event)}</div>
+            <div class="event-meta">${esc(meta)}</div>
+            <div class="event-user" data-user-id="${esc(e.installId || "")}">${esc(identity)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // ─────────── User drill-down modal ───────────
+    function openUserModal(userId, users, events) {
+      if (!userId) return;
+      const user = users.find(u => u.installId === userId);
+      if (!user) return;
+      state.currentModalUser = userId;
+
+      // Filter the event stream to just this user's events
+      const userEvents = (events || []).filter(e => e.installId === userId).slice(0, 80);
+
+      const grid = [];
+      const add = (k, v) => { if (v) grid.push(`<div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>`); };
+      add("Install ID", user.installId);
+      add("Name",       user.yourName || "—");
+      add("Email",      user.email || "—");
+      add("Role",       user.yourRole || "—");
+      add("Company",    user.companyName || "—");
+      add("ICP",        user.icp || "—");
+      add("Events",     `${user.eventCount || 0} total`);
+      add("Last seen",  fmtRelative(Number(user.lastSeen) || 0));
+      add("Last action", user.lastEvent || "—");
+
+      const timelineHtml = userEvents.length
+        ? userEvents.map(e => {
+            const meta = e.metadata && Object.keys(e.metadata).length
+              ? Object.entries(e.metadata).slice(0, 3).map(([k, v]) =>
+                  `${k}=${typeof v === "string" ? v.slice(0, 30) : v}`
+                ).join("  ")
+              : "";
+            return `
+              <div class="timeline-row">
+                <div class="timeline-time">${fmtTime(e.ts)}</div>
+                <div class="timeline-event">${esc(e.event)}${meta ? `<span class="meta">${esc(meta)}</span>` : ""}</div>
+              </div>
+            `;
+          }).join("")
+        : `<div class="empty">No events in the current stream window.</div>`;
+
+      const modalHtml = `
+        <div class="modal-bg" id="modal-bg">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-head">
+              <div>
+                <h3>${esc(user.yourName || user.email || user.installId || "User")}</h3>
+                <div class="modal-sub">${esc(user.yourRole || "")}${user.yourRole && user.companyName ? " · " : ""}${esc(user.companyName || "")}</div>
+              </div>
+              <button class="modal-close" id="modal-close" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="modal-grid">${grid.join("")}</div>
+              <div class="timeline-h">Recent activity (${userEvents.length})</div>
+              <div class="timeline">${timelineHtml}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const wrap = document.createElement("div");
+      wrap.innerHTML = modalHtml;
+      document.body.appendChild(wrap.firstElementChild);
+      document.getElementById("modal-bg").addEventListener("click", closeModal);
+      document.getElementById("modal-close").addEventListener("click", closeModal);
+      // Esc closes
+      const onKey = (e) => { if (e.key === "Escape") { closeModal(); document.removeEventListener("keydown", onKey); } };
+      document.addEventListener("keydown", onKey);
+    }
+    function closeModal() {
+      const m = document.getElementById("modal-bg");
+      if (m) m.remove();
+      state.currentModalUser = null;
+    }
+
+    // ─────────── Pause / resume ───────────
+    function togglePause() {
+      state.isPaused = !state.isPaused;
+      if (state.isPaused) {
+        if (state.pollTimer) clearTimeout(state.pollTimer);
+        state.pollTimer = null;
+      } else {
+        // Immediate fetch + resume schedule
+        const pw = sessionStorage.getItem(PW_KEY);
+        if (pw) fetchStats(pw).then(d => { if (d?.ok) { state.lastData = d; renderDashboard(d, true); } });
+        schedulePoll();
+      }
+      // Re-render header to reflect state
+      if (state.lastData) renderDashboard(state.lastData);
+    }
+
+    // ─────────── Boot ───────────
     (async () => {
       const pw = sessionStorage.getItem(PW_KEY);
       if (!pw) { renderLogin(); return; }
       const data = await fetchStats(pw).catch(() => null);
-      if (data && data.ok) renderDashboard(data);
+      if (data && data.ok) startLive(data);
       else { sessionStorage.removeItem(PW_KEY); renderLogin(); }
     })();
   </script>
