@@ -2,214 +2,496 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0A0A0B">
-  <title>Klosr — Sales OS for Founders. Close more, faster.</title>
-  <meta name="description" content="Klosr reads your screen, drafts replies in your voice, runs your demos with AI assist, and closes deals across LinkedIn, WhatsApp, Gmail, Slack, Teams, Meet, Zoom — every app a founder lives in.">
-  <meta property="og:title" content="Klosr — Close More, Faster.">
-  <meta property="og:description" content="The AI sales co-pilot built for B2B founders. Reads your screen with Claude Opus 4.7, drafts replies in your voice, runs your demos with Live Assist.">
-  <meta property="og:image" content="https://backend-kappa-nine-57.vercel.app/icons/icon128.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klosr — Close more deals.</title>
+  <meta name="description" content="Join the movement. Klosr is the AI sales coach for founders. By founders, for founders. Invite only.">
+  <meta property="og:title" content="Klosr — Close more deals.">
+  <meta property="og:description" content="By founders, for founders. The AI sales coach.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/png" href="/icons/icon128.png">
+  <meta property="og:url" content="https://klosr.co">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon48.png">
   <link rel="apple-touch-icon" href="/icons/icon128.png">
-  <link rel="stylesheet" href="/site.css">
+  <style>
+    /* ════════════════════════════════════════════════════════════════
+     * Klosr — invite-only waitlist landing
+     * Three live tickers across the top (money / deals / calls today)
+     * "By founders, for founders." · "Join the movement" CTA.
+     * Pure single-file, no deps. Matte black + warm gold.
+     * ════════════════════════════════════════════════════════════════ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0A0A0A;
+      --ink: #F4F4F5;
+      --ink-2: rgba(244, 244, 245, 0.62);
+      --ink-3: rgba(244, 244, 245, 0.40);
+      --gold: #FFD60A;
+      --gold-hi: #FFE355;
+      --gold-lo: #E8B904;
+      --error: #FCA5A5;
+      --success: #6EE7B7;
+    }
+    html, body {
+      background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Söhne", "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      padding: 90px 20px 40px;
+    }
+
+    /* ── Top tickers ──────────────────────────────────────────── */
+    .ticker {
+      position: fixed; top: 18px; z-index: 10;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 214, 10, 0.22);
+      border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+      color: var(--ink);
+      letter-spacing: 0.02em;
+      transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.18s ease;
+    }
+    .ticker.tl { left: 18px; }
+    .ticker.tr { right: 18px; }
+    .ticker.tc { left: 50%; transform: translateX(-50%); }
+    .ticker.pulse {
+      border-color: rgba(255, 214, 10, 0.65);
+      box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.10), 0 4px 14px rgba(255, 214, 10, 0.22);
+      transform: scale(1.04);
+    }
+    /* Center ticker keeps its translateX when pulsing */
+    .ticker.tc.pulse { transform: translateX(-50%) scale(1.04); }
+
+    .ticker .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 0 rgba(255, 214, 10, 0.6);
+      animation: dot-pulse 1.8s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 214, 10, 0.6); }
+      50%      { opacity: 0.55; box-shadow: 0 0 0 5px rgba(255, 214, 10, 0); }
+    }
+    .ticker-label { color: var(--ink-3); font-size: 11px; font-weight: 500; }
+    .ticker-value {
+      color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums;
+      font-size: 13px; letter-spacing: 0.01em;
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .container {
+      width: 100%; max-width: 460px;
+      display: flex; flex-direction: column; align-items: center;
+      animation: fade-in 0.6s ease-out;
+    }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .k-mark { width: 64px; height: 64px; margin-bottom: 32px; }
+    .k-mark svg { width: 100%; height: 100%; display: block; }
+
+    .headline {
+      font-size: 40px; font-weight: 800; text-align: center;
+      letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 12px;
+      max-width: 420px;
+    }
+    .headline .gold { color: var(--gold); font-weight: 700; }
+
+    .subhead {
+      font-size: 13.5px; line-height: 1.55; color: var(--ink-2);
+      text-align: center; margin-bottom: 32px;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      font-weight: 600;
+    }
+    .subhead .accent { color: var(--gold); }
+
+    /* ── Divider ──────────────────────────────────────────────── */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; margin-bottom: 22px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .divider::before, .divider::after {
+      content: ""; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255, 214, 10, 0.32), transparent);
+    }
+
+    /* ── Form ─────────────────────────────────────────────────── */
+    form { width: 100%; display: flex; flex-direction: column; gap: 9px; }
+    .field {
+      width: 100%; padding: 13px 15px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 10px;
+      color: var(--ink); font-size: 14.5px; font-family: inherit;
+      transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+    .field::placeholder { color: var(--ink-3); }
+    .field:focus {
+      outline: none;
+      border-color: rgba(255, 214, 10, 0.55);
+      background: rgba(255, 214, 10, 0.04);
+      box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.10);
+    }
+    .field.error {
+      border-color: rgba(248, 113, 113, 0.55);
+      background: rgba(248, 113, 113, 0.04);
+    }
+    .submit {
+      width: 100%; margin-top: 6px; padding: 15px 16px;
+      background: linear-gradient(135deg, var(--gold-hi) 0%, var(--gold) 50%, var(--gold-lo) 100%);
+      color: var(--bg); font-family: inherit; font-size: 14.5px; font-weight: 800;
+      letter-spacing: 0.04em; border: none; border-radius: 10px; cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 4px 14px rgba(255, 214, 10, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease, box-shadow 0.15s ease;
+    }
+    .submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+      box-shadow: 0 8px 22px rgba(255, 214, 10, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    .submit:active { transform: translateY(0); }
+    .submit:disabled { opacity: 0.55; cursor: wait; transform: none; }
+
+    .form-msg {
+      margin-top: 12px; font-size: 12.5px; text-align: center;
+      min-height: 16px; line-height: 1.5;
+    }
+    .form-msg.error { color: var(--error); }
+    .form-msg.success { color: var(--success); }
+
+    .counter {
+      margin-top: 24px; font-size: 12px; color: var(--ink-3);
+      text-align: center; letter-spacing: 0.02em;
+    }
+    .counter strong { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    /* ── Success state ────────────────────────────────────────── */
+    .success-card {
+      display: none; width: 100%; padding: 26px 22px;
+      background: rgba(110, 231, 183, 0.06);
+      border: 1px solid rgba(110, 231, 183, 0.30);
+      border-radius: 12px; text-align: center;
+      animation: fade-in 0.4s ease-out;
+    }
+    .success-card.visible { display: block; }
+    .success-icon { font-size: 36px; margin-bottom: 8px; }
+    .success-title { font-size: 18px; font-weight: 700; color: var(--success); margin-bottom: 6px; }
+    .success-body { font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+
+    .footer {
+      position: fixed; bottom: 14px; left: 0; right: 0;
+      text-align: center; font-size: 10.5px; color: var(--ink-3);
+      letter-spacing: 0.04em;
+    }
+    .footer a { color: var(--ink-2); text-decoration: none; transition: color 0.15s; }
+    .footer a:hover { color: var(--gold); }
+
+    /* ── Mobile ───────────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .ticker-label { display: none; }
+    }
+    @media (max-width: 540px) {
+      body { padding: 70px 18px 40px; }
+      .headline { font-size: 32px; }
+      .subhead { font-size: 11.5px; letter-spacing: 0.06em; }
+      .k-mark { width: 56px; height: 56px; margin-bottom: 24px; }
+      .ticker {
+        top: 12px; padding: 6px 10px; font-size: 11px; gap: 6px;
+      }
+      .ticker.tl { left: 8px; }
+      .ticker.tr { right: 8px; }
+      .ticker-value { font-size: 12px; }
+    }
+    @media (max-width: 380px) {
+      .ticker.tc { display: none; }   /* hide center on tiny phones to avoid collision */
+    }
+  </style>
 </head>
 <body>
-  <header class="site-nav">
-    <a href="/" class="brand"><span class="brand-badge">K</span><span class="brand-name">Klosr</span></a>
-    <nav>
-      <a href="/pricing">Pricing</a>
-      <a href="/install">Install</a>
-      <a href="/changelog">Changelog</a>
-      <a href="/app.html" class="cta-mini">Klosr Desktop →</a>
-    </nav>
-  </header>
+  <!-- Top tickers — money (left), deals closed (center), calls booked (right) -->
+  <div class="ticker tl" id="t-money">
+    <span class="dot"></span>
+    <span class="ticker-value" id="money-val">&mdash;</span>
+    <span class="ticker-label">generated today</span>
+  </div>
+  <div class="ticker tc" id="t-deals">
+    <span class="dot"></span>
+    <span class="ticker-value" id="deals-val">&mdash;</span>
+    <span class="ticker-label">deals closed today</span>
+  </div>
+  <div class="ticker tr" id="t-calls">
+    <span class="dot"></span>
+    <span class="ticker-value" id="calls-val">&mdash;</span>
+    <span class="ticker-label">calls booked today</span>
+  </div>
 
-  <main>
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-eyebrow">⚡ Klosr v4.5.2 · Claude Opus 4.7 multimodal</div>
-        <h1>Close more deals. <em>Faster.</em></h1>
-        <p class="hero-sub">
-          Klosr reads your screen, drafts replies in your voice, runs your demos with Live Assist, and tracks every commitment across LinkedIn, WhatsApp, Gmail, Slack, Teams, Meet, Zoom — every app a founder lives in.
-        </p>
-        <div class="hero-cta">
-          <a href="/install" class="btn-primary">Install Klosr — free</a>
-          <a href="#how-it-works" class="btn-ghost">See how it works ↓</a>
-        </div>
-        <div class="hero-trust">
-          Built by founders, for founders. <span class="dot">·</span> Founder-tier free, forever.
-        </div>
-      </div>
-
-      <div class="hero-demo">
-        <div class="hero-demo-frame">
-          <div class="hero-demo-bar">
-            <span class="hd-dot hd-dot-r"></span>
-            <span class="hd-dot hd-dot-y"></span>
-            <span class="hd-dot hd-dot-g"></span>
-            <span class="hd-title">Klosr Desktop · Watching your screen</span>
-          </div>
-          <div class="hero-demo-body">
-            <div class="hero-demo-watch">👁️ Klosr is watching · Opus 4.7</div>
-            <div class="hero-demo-card">
-              <div class="hd-card-head">🔥 HOT · Juan replied on WhatsApp</div>
-              <div class="hd-card-text">"Suena interesante, ¿qué precio manejáis?"</div>
-              <div class="hd-card-draft">
-                <div class="hd-card-label">✍ Drafted in your voice</div>
-                <div class="hd-card-draft-text">€49/mes en plan founder, sin compromiso. Trial de 14 días gratis. Te mando link ahora — ¿lunes 10h hacemos 30 min para conectar tus fuentes?</div>
-              </div>
-              <div class="hd-card-actions">
-                <span class="hd-btn">📤 WhatsApp</span>
-                <span class="hd-btn">Copy</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="logos">
-      <div class="logos-label">Klosr works in every app a founder lives in</div>
-      <div class="logos-row">
-        <span class="logo-pill">LinkedIn</span>
-        <span class="logo-pill">WhatsApp</span>
-        <span class="logo-pill">Gmail</span>
-        <span class="logo-pill">Slack</span>
-        <span class="logo-pill">Microsoft Teams</span>
-        <span class="logo-pill">Google Meet</span>
-        <span class="logo-pill">Zoom</span>
-        <span class="logo-pill">HubSpot</span>
-        <span class="logo-pill">Pipedrive</span>
-        <span class="logo-pill">Salesforce</span>
-      </div>
-    </section>
-
-    <section class="features" id="how-it-works">
-      <h2 class="section-h">Klosr does the four things that <em>actually close deals</em>.</h2>
-
-      <div class="feature-grid">
-        <div class="feature">
-          <div class="feature-num">01</div>
-          <div class="feature-icon">👁️</div>
-          <h3>Reads your screen</h3>
-          <p>Klosr Desktop watches your screen with Claude Opus 4.7. Every reply that arrives — WhatsApp, email, Slack, Sales Nav — gets seen, analyzed, and drafted in your voice within 4 seconds.</p>
-          <ul class="feature-list">
-            <li>Multimodal vision · works on every app, not just LinkedIn</li>
-            <li>Change-detection so it only fires when something actually moved</li>
-            <li>Anti-throttle keepalive — runs in the background while you work</li>
-          </ul>
-        </div>
-
-        <div class="feature">
-          <div class="feature-num">02</div>
-          <div class="feature-icon">✍</div>
-          <h3>Drafts in your voice</h3>
-          <p>Klosr learns from your edits. Every time you tweak a draft, it remembers. After 5 edits, drafts feel like you wrote them — citing your real proof points, using your real objection rebuttals.</p>
-          <ul class="feature-list">
-            <li>Voice mirroring from your actual edits</li>
-            <li>Cites your real customer proofs (not generic "we're great")</li>
-            <li>Built-in objection playbook with your specific rebuttals</li>
-          </ul>
-        </div>
-
-        <div class="feature">
-          <div class="feature-num">03</div>
-          <div class="feature-icon">📞</div>
-          <h3>Runs your calls</h3>
-          <p>Live Assist transcribes Meet/Zoom/Teams in real time, separates speakers, flags buying signals, and suggests "say next" moves. After the call: auto-drafted follow-up email, commitments captured, deal stage updated.</p>
-          <ul class="feature-list">
-            <li>Diarized transcript with talk-ratio tracking</li>
-            <li>Live coach: objections, buying signals, proof-to-cite</li>
-            <li>Post-call summary + drafted follow-up in 30s</li>
-          </ul>
-        </div>
-
-        <div class="feature">
-          <div class="feature-num">04</div>
-          <div class="feature-icon">📊</div>
-          <h3>Closes the loop</h3>
-          <p>Pipeline view with deal temperature, weighted revenue, stuck-deal alerts. Auto-scheduled follow-ups. One-click revival messages with fresh company news. Won deals → proof library auto-extracted.</p>
-          <ul class="feature-list">
-            <li>Daily Close dashboard — top 12 actions ranked by $ impact</li>
-            <li>HubSpot, Pipedrive, Salesforce push integrations</li>
-            <li>Slack alerts + weekly recaps to your team channel</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="how">
-      <h2 class="section-h">How Klosr fits a founder's day</h2>
-      <ol class="how-steps">
-        <li>
-          <div class="how-num">8:00 AM</div>
-          <div class="how-body"><strong>Open Klosr Desktop · ⚡ Close today.</strong> 12 ranked actions: 3 overdue commitments, 2 hot replies waiting, 1 stuck deal at closing 7 days. Klosr already pre-drafted every response.</div>
-        </li>
-        <li>
-          <div class="how-num">10:30 AM</div>
-          <div class="how-body"><strong>Demo call on Zoom.</strong> Live Assist transcribes, flags the buying signal at minute 8 ("we'd want this Friday"), surfaces your "Customer X closed in 5 days" proof point. You close on the call.</div>
-        </li>
-        <li>
-          <div class="how-num">2:15 PM</div>
-          <div class="how-body"><strong>Prospect replies on WhatsApp.</strong> Klosr Watch sees it. Opus 4.7 drafts the response in your voice citing your proof library. Click 📤 WhatsApp → composer auto-fills → press Enter. 7 seconds, reply received to reply sent.</div>
-        </li>
-        <li>
-          <div class="how-num">5:00 PM</div>
-          <div class="how-body"><strong>End of day.</strong> Pipeline updated automatically: deal stages advanced, follow-ups scheduled day-4 + day-9 on every fresh DM. Klosr keeps watching while you log off.</div>
-        </li>
-      </ol>
-    </section>
-
-    <section class="proof">
-      <div class="proof-card">
-        <div class="proof-quote">
-          "Reciprocal money siempre entre founders."
-        </div>
-        <div class="proof-author">— Pau Aguilar, Founder @ Strathens · first Klosr case study</div>
-        <div class="proof-numbers">
-          <div class="proof-num"><strong>40</strong> DMs sent in 25 min</div>
-          <div class="proof-num"><strong>3</strong> demos booked Day 2</div>
-          <div class="proof-num"><strong>1</strong> closed signup Day 3</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="cta-final">
-      <h2 class="section-h">Stop losing deals to inbox lag.</h2>
-      <p>Klosr is free for founders. Forever. Install it, connect it once, watch your close rate compound.</p>
-      <div class="hero-cta">
-        <a href="/install" class="btn-primary">Install Klosr — free</a>
-        <a href="/pricing" class="btn-ghost">See pricing</a>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-foot">
-    <div class="foot-grid">
-      <div>
-        <div class="foot-brand"><span class="brand-badge">K</span> Klosr</div>
-        <div class="foot-tag">Sales OS for founders. Close more, faster.</div>
-      </div>
-      <div>
-        <div class="foot-h">Product</div>
-        <a href="/install">Install</a>
-        <a href="/pricing">Pricing</a>
-        <a href="/changelog">Changelog</a>
-        <a href="/app.html">Klosr Desktop</a>
-      </div>
-      <div>
-        <div class="foot-h">Legal</div>
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-      </div>
-      <div>
-        <div class="foot-h">Built by</div>
-        <a href="https://www.linkedin.com/in/bosco-maldonado/" target="_blank" rel="noopener">Bosco Maldonado Arias</a>
-        <a href="mailto:hello@klosr.com">hello@klosr.com</a>
-      </div>
+  <div class="container">
+    <!-- K mark -->
+    <div class="k-mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 4v16" stroke="#FFD60A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 12l7-8" stroke="#FFD60A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 12l7 8" stroke="#FFD60A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
-    <div class="foot-tail">© 2026 Klosr. Built by founders, for founders.</div>
-  </footer>
+
+    <div class="headline">
+      <span class="gold">Close</span> more deals.
+    </div>
+    <div class="subhead">By founders, <span class="accent">for founders.</span></div>
+
+    <div class="divider">Invite only</div>
+
+    <form id="waitlist-form" autocomplete="off" novalidate>
+      <input type="text"  class="field" id="f-name"  name="name"  placeholder="Your name"     required maxlength="100" autocomplete="name">
+      <input type="email" class="field" id="f-email" name="email" placeholder="Email"          required maxlength="200" autocomplete="email">
+      <input type="tel"   class="field" id="f-phone" name="phone" placeholder="Phone (with country code)" required maxlength="30" autocomplete="tel">
+      <button type="submit" class="submit" id="f-submit">Join the movement</button>
+      <div class="form-msg" id="f-msg"></div>
+    </form>
+
+    <div class="counter" id="counter">
+      <strong id="counter-num">&mdash;</strong> founders on the waitlist
+    </div>
+
+    <div class="success-card" id="success">
+      <div class="success-title">You're in the movement</div>
+      <div class="success-body">We review every signup personally. You'll hear from us within 48 hours by email or phone &mdash; keep an eye out.</div>
+    </div>
+  </div>
+
+  <div class="footer">&copy; Klosr &middot; <a href="/privacy">Privacy</a></div>
+
+  <script>
+    // ════════════════════════════════════════════════════════════════
+    // TOP TICKERS — money / deals / calls today
+    // ────────────────────────────────────────────────────────────────
+    // PRE-LAUNCH NOTE: simulated counters. Money/deals/calls scale with
+    // time-of-day so the same visitor sees consistent numbers across
+    // refresh, but they tick up in real time while the page is open.
+    // Replace with /api/intel "today-stats" once real telemetry has
+    // traction (deal_won + meeting_booked + call_coached event counts).
+    //
+    // Coordination: the three counters are CORRELATED, not independent.
+    // - calls tick every 30-90s (+1 call, +$400-1400 money)
+    // - deals tick every 90-220s (+1 deal, +$1500-5000 money)
+    //   ≈ 25% of calls "convert" to deals, realistic close rate
+    // - money also ticks every 8-22s on its own (+$80-380) — micro
+    //   events like upsells / renewals between major closes
+    // ════════════════════════════════════════════════════════════════
+
+    (function startTickers() {
+      const moneyEl  = document.getElementById("money-val");
+      const dealsEl  = document.getElementById("deals-val");
+      const callsEl  = document.getElementById("calls-val");
+      const moneyBox = document.getElementById("t-money");
+      const dealsBox = document.getElementById("t-deals");
+      const callsBox = document.getElementById("t-calls");
+
+      // End-of-day targets. Tune as Klosr grows.
+      const DAILY_CALLS_TARGET = 124;
+      const DAILY_DEALS_TARGET = 31;     // ≈25% close rate of calls
+      const DAILY_MONEY_TARGET = 78400;  // ≈ $2,530 avg deal value × 31 deals
+
+      // What fraction of day-end values should be reached by now?
+      function dayProgressRatio() {
+        const now = new Date();
+        const mins = now.getHours() * 60 + now.getMinutes();
+        return Math.max(0.08, Math.min(1, mins / (60 * 22)));
+      }
+
+      // Per-session seed so refreshes don't reset everything dramatically
+      const sessionSeed = (() => {
+        const k = "kl_wl_seed_" + new Date().toISOString().slice(0, 10);
+        let s = sessionStorage.getItem(k);
+        if (!s) { s = String(Math.random()); sessionStorage.setItem(k, s); }
+        return parseFloat(s);
+      })();
+
+      function baseCalls() {
+        const r = dayProgressRatio();
+        const jitter = Math.floor(sessionSeed * 7) - 3;
+        return Math.max(1, Math.floor(DAILY_CALLS_TARGET * r) + jitter);
+      }
+      function baseDeals() {
+        const r = dayProgressRatio();
+        const jitter = Math.floor(sessionSeed * 3) - 1;
+        return Math.max(1, Math.floor(DAILY_DEALS_TARGET * r) + jitter);
+      }
+      function baseMoney() {
+        const r = dayProgressRatio();
+        const jitter = Math.floor(sessionSeed * 1400) - 700;
+        return Math.max(100, Math.floor(DAILY_MONEY_TARGET * r) + jitter);
+      }
+
+      let liveCalls = baseCalls();
+      let liveDeals = baseDeals();
+      let liveMoney = baseMoney();
+
+      function fmtMoney(n) { return "$" + Math.round(n).toLocaleString(); }
+      function flash(el) {
+        el.classList.add("pulse");
+        setTimeout(() => el.classList.remove("pulse"), 600);
+      }
+      function paintAll() {
+        moneyEl.textContent = fmtMoney(liveMoney);
+        dealsEl.textContent = String(liveDeals);
+        callsEl.textContent = String(liveCalls);
+      }
+      paintAll();
+
+      // Calls ticker: +1 every 30-90s, also adds money
+      function scheduleCallTick() {
+        const delay = 30000 + Math.random() * 60000;
+        setTimeout(() => {
+          liveCalls += 1;
+          const dealClose = 400 + Math.floor(Math.random() * 1000);
+          liveMoney += dealClose;
+          callsEl.textContent = String(liveCalls);
+          moneyEl.textContent = fmtMoney(liveMoney);
+          flash(callsBox); flash(moneyBox);
+          scheduleCallTick();
+        }, delay);
+      }
+
+      // Deals ticker: +1 every 90-220s, adds bigger money chunk
+      function scheduleDealTick() {
+        const delay = 90000 + Math.random() * 130000;
+        setTimeout(() => {
+          liveDeals += 1;
+          const dealValue = 1500 + Math.floor(Math.random() * 3500);
+          liveMoney += dealValue;
+          dealsEl.textContent = String(liveDeals);
+          moneyEl.textContent = fmtMoney(liveMoney);
+          flash(dealsBox); flash(moneyBox);
+          scheduleDealTick();
+        }, delay);
+      }
+
+      // Money-only micro ticks every 8-22s
+      function scheduleMoneyTick() {
+        const delay = 8000 + Math.random() * 14000;
+        setTimeout(() => {
+          const inc = 80 + Math.floor(Math.random() * 320);
+          liveMoney += inc;
+          moneyEl.textContent = fmtMoney(liveMoney);
+          flash(moneyBox);
+          scheduleMoneyTick();
+        }, delay);
+      }
+
+      scheduleCallTick();
+      scheduleDealTick();
+      scheduleMoneyTick();
+
+      // Hourly resync against time-of-day curve
+      setInterval(() => {
+        const tCalls = baseCalls();
+        if (Math.abs(liveCalls - tCalls) > 8) { liveCalls = tCalls; callsEl.textContent = String(liveCalls); }
+        const tDeals = baseDeals();
+        if (Math.abs(liveDeals - tDeals) > 4) { liveDeals = tDeals; dealsEl.textContent = String(liveDeals); }
+        const tMoney = baseMoney();
+        if (Math.abs(liveMoney - tMoney) > 5000) { liveMoney = tMoney; moneyEl.textContent = fmtMoney(liveMoney); }
+      }, 60 * 60 * 1000);
+    })();
+
+    // ════════════════════════════════════════════════════════════════
+    // WAITLIST FORM
+    // ════════════════════════════════════════════════════════════════
+    const form     = document.getElementById("waitlist-form");
+    const submit   = document.getElementById("f-submit");
+    const msg      = document.getElementById("f-msg");
+    const successC = document.getElementById("success");
+    const counter  = document.getElementById("counter");
+    const counterN = document.getElementById("counter-num");
+
+    const isEmail = (e) => /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(e);
+    const isPhone = (p) => p.replace(/[^\d]/g, "").length >= 7;
+
+    function setError(field, on) {
+      document.getElementById("f-" + field).classList.toggle("error", on);
+    }
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = "form-msg" + (kind ? " " + kind : "");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name  = document.getElementById("f-name").value.trim();
+      const email = document.getElementById("f-email").value.trim();
+      const phone = document.getElementById("f-phone").value.trim();
+
+      ["name", "email", "phone"].forEach((f) => setError(f, false));
+      showMsg("", "");
+
+      if (!name || name.length < 2) { setError("name", true); showMsg("Tell us your name.", "error"); return; }
+      if (!isEmail(email))          { setError("email", true); showMsg("That email looks off - double-check.", "error"); return; }
+      if (!isPhone(phone))          { setError("phone", true); showMsg("Phone needs at least 7 digits with country code.", "error"); return; }
+
+      submit.disabled = true;
+      const orig = submit.textContent;
+      submit.textContent = "Submitting...";
+      try {
+        const res = await fetch("/api/intel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "waitlist-signup",
+            params: { name, email, phone, source: "klosr.co" },
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data && data.ok) {
+          form.style.display = "none";
+          counter.style.display = "none";
+          successC.classList.add("visible");
+          if (typeof data.count === "number") counterN.textContent = data.count.toLocaleString();
+        } else {
+          const reason = (data && data.reason) || "";
+          const errMsg = reason === "duplicate"      ? "You're already in the movement - we'll be in touch."
+                       : reason === "invalid_email"  ? "That email looks off - double-check."
+                       : reason === "invalid_phone"  ? "Phone needs at least 7 digits with country code."
+                       : reason === "rate_limited"   ? "Too many requests - wait a minute and try again."
+                       : "Something went wrong. Try again in a moment.";
+          showMsg(errMsg, "error");
+          submit.disabled = false;
+          submit.textContent = orig;
+        }
+      } catch (err) {
+        showMsg("Couldn't reach the server. Check your connection and retry.", "error");
+        submit.disabled = false;
+        submit.textContent = orig;
+      }
+    });
+
+    // Waitlist counter — 197 FOMO floor + real signups stacked on top
+    (async () => {
+      const SEED_FLOOR = 197;
+      try {
+        const res = await fetch("/api/intel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "waitlist-count", params: {} }),
+        });
+        const data = await res.json().catch(() => ({}));
+        const real = (data && typeof data.count === "number") ? data.count : 0;
+        const shown = Math.max(SEED_FLOOR, SEED_FLOOR + real);
+        counterN.textContent = shown.toLocaleString();
+      } catch {
+        counterN.textContent = SEED_FLOOR.toLocaleString();
+      }
+    })();
+  </script>
 </body>
 </html>
