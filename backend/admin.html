@@ -296,6 +296,45 @@
       return res.json();
     }
 
+    async function fetchWaitlist(pw) {
+      const res = await fetch(INTEL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "waitlist-recent", params: { password: pw, limit: 500 } }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }
+
+    async function refreshWaitlist() {
+      const pw = sessionStorage.getItem(PW_KEY);
+      if (!pw) return;
+      const w = await fetchWaitlist(pw).catch(() => null);
+      if (w && w.ok) {
+        state.waitlist = { count: w.count || 0, entries: w.entries || [], loaded: true };
+        if (state.lastData) renderDashboard(state.lastData);
+      }
+    }
+
+    function exportWaitlistCSV() {
+      const entries = state.waitlist.entries || [];
+      if (!entries.length) return;
+      const header = ["name", "email", "phone", "source", "joined_iso"];
+      const lines = [header.join(",")];
+      for (const e of entries) {
+        const row = [e.name || "", e.email || "", e.phone || "", e.source || "", e.ts ? new Date(Number(e.ts)).toISOString() : ""]
+          .map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+        lines.push(row);
+      }
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `klosr-waitlist-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
     // ─────────── State ───────────
     // Closure-scoped state for the live loop. Keeps track of:
     //  - which event IDs we've already shown (so re-renders don't re-flash)
@@ -309,6 +348,7 @@
       pollTimer: null,
       lastData: null,
       currentModalUser: null,
+      waitlist: { count: 0, entries: [], loaded: false },
     };
 
     // ─────────── Login ───────────
@@ -344,6 +384,7 @@
     function startLive(initialData) {
       state.lastData = initialData;
       renderDashboard(initialData);
+      refreshWaitlist();
       schedulePoll();
     }
 
@@ -353,10 +394,16 @@
       state.pollTimer = setTimeout(async () => {
         const pw = sessionStorage.getItem(PW_KEY);
         if (!pw) return;
-        const fresh = await fetchStats(pw).catch(() => null);
+        const [fresh, w] = await Promise.all([
+          fetchStats(pw).catch(() => null),
+          fetchWaitlist(pw).catch(() => null),
+        ]);
+        if (w && w.ok) state.waitlist = { count: w.count || 0, entries: w.entries || [], loaded: true };
         if (fresh && fresh.ok) {
           state.lastData = fresh;
           renderDashboard(fresh, /* isLiveTick */ true);
+        } else if (w && w.ok && state.lastData) {
+          renderDashboard(state.lastData, /* isLiveTick */ true);
         }
         schedulePoll();
       }, POLL_INTERVAL_MS);
@@ -440,6 +487,17 @@
           </div>
 
           <section>
+            <h2>
+              <span>🎯 Waitlist <span class="h-meta">${state.waitlist.loaded ? state.waitlist.count + " signups" : "loading…"}</span></span>
+              <span style="display:flex;gap:6px">
+                <button class="btn btn-ghost" id="waitlist-refresh" style="font-size:11px;padding:4px 10px">↻ Refresh</button>
+                <button class="btn btn-ghost" id="waitlist-csv" style="font-size:11px;padding:4px 10px">⬇ Export CSV</button>
+              </span>
+            </h2>
+            ${renderWaitlist(state.waitlist.entries)}
+          </section>
+
+          <section>
             <h2>The funnel · last 7 days <span class="h-meta">outbound → prep → coach → follow-up → close</span></h2>
             <div class="funnel">
               ${funnelSteps.map((s, i) => `
@@ -490,6 +548,11 @@
         renderLogin();
       });
 
+      const csvBtn = document.getElementById("waitlist-csv");
+      if (csvBtn) csvBtn.addEventListener("click", exportWaitlistCSV);
+      const wlRefreshBtn = document.getElementById("waitlist-refresh");
+      if (wlRefreshBtn) wlRefreshBtn.addEventListener("click", refreshWaitlist);
+
       // Filter pills
       document.querySelectorAll(".filter-pill").forEach((pill) => {
         pill.addEventListener("click", () => {
@@ -510,6 +573,38 @@
           <div class="stat-label">${esc(label)}</div>
           <div class="stat-value">${esc(String(value))}</div>
           <div class="stat-sub">${esc(sub)}</div>
+        </div>
+      `;
+    }
+
+    function renderWaitlist(entries) {
+      if (!state.waitlist.loaded) return `<div class="empty">Loading signups…</div>`;
+      if (!entries || !entries.length) return `<div class="empty">No signups yet. Share klosr.co to start filling the list.</div>`;
+      const rows = entries.map((e, i) => {
+        const when = e.ts ? fmtRelative(Number(e.ts)) : "—";
+        const date = e.ts ? new Date(Number(e.ts)).toLocaleString() : "";
+        return `
+          <tr>
+            <td style="color:rgba(244,244,245,0.45);font-weight:700">${i + 1}</td>
+            <td><strong>${esc(e.name || "—")}</strong></td>
+            <td>${e.email ? `<a href="mailto:${esc(e.email)}">${esc(e.email)}</a>` : "—"}</td>
+            <td>${e.phone ? `<a href="tel:${esc(e.phone)}" style="color:rgba(244,244,245,0.80)">${esc(e.phone)}</a>` : "—"}</td>
+            <td class="hide-sm"><span class="tag">${esc(e.source || "klosr.co")}</span></td>
+            <td class="hide-sm" style="color:rgba(244,244,245,0.55)" title="${esc(date)}">${esc(when)}</td>
+          </tr>
+        `;
+      }).join("");
+      return `
+        <div style="overflow-x:auto; max-height:540px; overflow-y:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Name</th><th>Email</th><th>Phone</th>
+                <th class="hide-sm">Source</th><th class="hide-sm">Joined</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
         </div>
       `;
     }

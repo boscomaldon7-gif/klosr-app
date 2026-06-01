@@ -194,4 +194,51 @@ export async function getRecentEvents(n = 100) {
   }).filter(Boolean);
 }
 
+// ───── Waitlist (klosr.co landing page) ─────────────────────────
+// Stored as:
+//   - kl:waitlist:emails  → SET of normalized emails (dedupe key)
+//   - kl:waitlist:list    → LIST of full entries as JSON (newest-first)
+//   - kl:waitlist:count   → INT, total unique signups (fast counter)
+//
+// Adding: SADD checks dedupe, returns 1 if new / 0 if dupe. On new,
+// LPUSH the full entry + INCR count. All in one pipeline for atomicity.
+
+export async function waitlistAdd(entry) {
+  if (!hasUpstash() || !entry || !entry.email) return { ok: false, reason: "upstash_not_configured" };
+  const emailKey = String(entry.email).toLowerCase().trim();
+  const record = JSON.stringify({
+    name:   String(entry.name  || "").slice(0, 100),
+    email:  emailKey,
+    phone:  String(entry.phone || "").slice(0, 30),
+    source: String(entry.source || "klosr.co").slice(0, 40),
+    ts:     Date.now(),
+  });
+  // SADD returns 1 if added (new), 0 if already present.
+  const added = await run(["SADD", "kl:waitlist:emails", emailKey]);
+  if (added === 0 || added === "0") return { ok: false, reason: "duplicate" };
+  // Brand new — write the full record + bump the counter.
+  await pipe([
+    ["LPUSH", "kl:waitlist:list", record],
+    ["INCR",  "kl:waitlist:count"],
+  ]);
+  const count = await waitlistCount();
+  return { ok: true, count };
+}
+
+export async function waitlistCount() {
+  if (!hasUpstash()) return 0;
+  const n = await run(["GET", "kl:waitlist:count"]);
+  const parsed = Number(n);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+// Admin-only: fetch latest N waitlist entries for the admin dashboard.
+export async function waitlistRecent(n = 50) {
+  if (!hasUpstash()) return [];
+  const raw = (await run(["LRANGE", "kl:waitlist:list", "0", String(n - 1)])) || [];
+  return raw.map(r => {
+    try { return JSON.parse(r); } catch { return null; }
+  }).filter(Boolean);
+}
+
 export { hasUpstash };

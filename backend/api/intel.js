@@ -23,7 +23,7 @@
 import { applyCors, requirePost, readJsonBody } from "../lib/cors.js";
 import { ninjaGet, normalizeDomain } from "../lib/ninjapear.js";
 import { getClient } from "../lib/claude.js";
-import { logEvent, getOverviewStats, getFeatureCounters, getAllUsers, getRecentEvents, hasUpstash } from "../lib/upstash.js";
+import { logEvent, getOverviewStats, getFeatureCounters, getAllUsers, getRecentEvents, hasUpstash, waitlistAdd, waitlistCount, waitlistRecent } from "../lib/upstash.js";
 import { searchCompany, searchPerson } from "../lib/serpapi.js";
 
 // ───── Action handlers ─────────────────────────────────────────────
@@ -1077,6 +1077,76 @@ async function actionAdminStats(params) {
     recentEvents: recentEvents || [],
     generatedAt: new Date().toISOString(),
   };
+}
+
+// ═════════════════════════════════════════════════════════════════
+// WAITLIST — klosr.co landing page signup
+// ─────────────────────────────────────────────────────────────────
+// Public endpoint (no auth). Validates name/email/phone, dedupes by
+// email, stores in Upstash. Returns { ok, count } on success.
+// Also fires a log-event ("waitlist_signup") so it shows in admin.
+// ═════════════════════════════════════════════════════════════════
+
+// Loose but real validators. Server is the source of truth; client
+// can be tricked. Keep these tight enough to catch real typos but
+// lenient enough to accept international formats.
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+function isValidEmail(s) { return typeof s === "string" && EMAIL_RE.test(s); }
+function isValidPhone(s) {
+  if (typeof s !== "string") return false;
+  const digits = s.replace(/[^\d]/g, "");
+  return digits.length >= 7 && digits.length <= 18;
+}
+
+async function actionWaitlistSignup(params) {
+  const name   = String((params?.name  || "")).trim().slice(0, 100);
+  const email  = String((params?.email || "")).trim().toLowerCase().slice(0, 200);
+  const phone  = String((params?.phone || "")).trim().slice(0, 30);
+  const source = String((params?.source || "klosr.co")).slice(0, 40);
+
+  if (!name || name.length < 2) return { ok: false, reason: "invalid_name" };
+  if (!isValidEmail(email))     return { ok: false, reason: "invalid_email" };
+  if (!isValidPhone(phone))     return { ok: false, reason: "invalid_phone" };
+
+  if (!hasUpstash()) return { ok: false, reason: "upstash_not_configured" };
+
+  const result = await waitlistAdd({ name, email, phone, source });
+  if (!result || !result.ok) {
+    return { ok: false, reason: result?.reason || "storage_failed" };
+  }
+
+  // Fire telemetry — shows up in the live admin dashboard alongside
+  // every other event. installId is the email so admin can tell
+  // signups apart in the event stream.
+  try {
+    await logEvent({
+      installId: "waitlist:" + email,
+      event: "waitlist_signup",
+      metadata: { source, hasPhone: !!phone, count: result.count },
+      userMeta: { yourName: name, email, source },
+    });
+  } catch {/* non-fatal */}
+
+  return { ok: true, count: result.count };
+}
+
+async function actionWaitlistCount() {
+  const count = await waitlistCount();
+  return { ok: true, count };
+}
+
+// Admin-only: return the latest waitlist entries (name/email/phone/source/ts)
+// so the admin dashboard can list + export every signup. Gated by the same
+// ADMIN_PASSWORD used by admin-stats.
+async function actionWaitlistRecent(params) {
+  const pw = (params?.password || "").toString();
+  const expected = process.env.ADMIN_PASSWORD || "";
+  if (!expected || pw !== expected) return { ok: false, reason: "unauthorized" };
+  if (!hasUpstash()) return { ok: false, reason: "upstash_not_configured" };
+  const limit = Math.min(Math.max(Number(params?.limit) || 200, 1), 1000);
+  const entries = await waitlistRecent(limit);
+  const count = await waitlistCount();
+  return { ok: true, count, entries };
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -3757,6 +3827,9 @@ const ACTIONS = {
   "full-dossier":          actionFullDossier,
   "log-event":             actionLogEvent,
   "admin-stats":           actionAdminStats,
+  "waitlist-signup":       actionWaitlistSignup,
+  "waitlist-count":        actionWaitlistCount,
+  "waitlist-recent":       actionWaitlistRecent,
   "extract-proof-from-win": actionExtractProofFromWin,
   "deal-revival-draft":     actionDealRevivalDraft,
   "multi-thread-suggest":   actionMultiThreadSuggest,
